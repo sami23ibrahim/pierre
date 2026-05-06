@@ -710,3 +710,22 @@ button.tile-media {
     aspect-ratio: auto;
   }
 }
+
+/* When fullscreen on a portrait phone, rotate the player 90° so the video
+   looks landscape regardless of phone orientation. Rotating the phone CW
+   un-rotates the player in the user's view. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .vm-stage.is-fs {
+    position: fixed;
+    width: 100vh;
+    height: 100vw;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+  .vm-stage.is-fs .vm-frame {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+}
