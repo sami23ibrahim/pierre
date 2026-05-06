@@ -580,6 +580,12 @@ button.tile-media {
   border: 0;
   display: block;
 }
+.vm-touch-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: transparent;
+}
 .vm-close {
   position: absolute;
   top: 14px;
@@ -692,7 +698,15 @@ button.tile-media {
   .vm-btn { width: 44px; height: 44px; }
   .vm-range { width: 70px; }
   .tile-media.is-video .play-overlay svg { width: 52px; height: 52px; padding: 14px; }
-  /* On touch devices, controls visible by default (no hover) */
-  .vm-stage .vm-controls { opacity: 1; pointer-events: auto; }
-  .vm-stage .vm-close { opacity: 0.9; pointer-events: auto; }
+
+  /* CSS-only fullscreen on mobile — toggled by the fullscreen button */
+  .vm-stage.is-fs {
+    width: 100vw;
+    height: 100vh;
+  }
+  .vm-stage.is-fs .vm-frame {
+    width: 100vw;
+    height: 100vh;
+    aspect-ratio: auto;
+  }
 }

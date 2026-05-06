@@ -15,6 +15,7 @@ export default function VideoModal({ videoId, onClose }: Props) {
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
   const [active, setActive] = useState(true);
+  const [cssFullscreen, setCssFullscreen] = useState(false);
   const idleTimerRef = useRef<number | null>(null);
 
   const ping = () => {
@@ -41,6 +42,7 @@ export default function VideoModal({ videoId, onClose }: Props) {
       player.destroy().catch(() => {});
       playerRef.current = null;
       setPlaying(false);
+      setCssFullscreen(false);
     };
   }, [videoId]);
 
@@ -89,6 +91,12 @@ export default function VideoModal({ videoId, onClose }: Props) {
   };
 
   const requestFullscreen = async () => {
+    const isMobile = window.matchMedia("(max-width: 760px)").matches;
+    if (isMobile) {
+      setCssFullscreen((prev) => !prev);
+      ping();
+      return;
+    }
     const p = playerRef.current;
     try {
       if (p) await p.requestFullscreen();
@@ -108,7 +116,7 @@ export default function VideoModal({ videoId, onClose }: Props) {
   return (
     <div className="vm-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div
-        className={`vm-stage ${playing ? "" : "is-paused"} ${active ? "is-active" : ""}`}
+        className={`vm-stage ${playing ? "" : "is-paused"} ${active ? "is-active" : ""} ${cssFullscreen ? "is-fs" : ""}`}
         onClick={(e) => { e.stopPropagation(); ping(); }}
         onMouseMove={ping}
         onMouseLeave={() => setActive(false)}
@@ -121,6 +129,12 @@ export default function VideoModal({ videoId, onClose }: Props) {
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
             title="Video"
+          />
+          <div
+            className="vm-touch-layer"
+            onClick={ping}
+            onTouchStart={ping}
+            aria-hidden
           />
           <button className="vm-close" onClick={onClose} aria-label="Close" type="button">
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>

@@ -15,7 +15,8 @@
       "Bash(git add *)",
       "Bash(git commit -m 'Initial commit: Pierre Mouarkech portfolio site *)",
       "Bash(git remote *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git commit *)"
     ]
   }
 }
