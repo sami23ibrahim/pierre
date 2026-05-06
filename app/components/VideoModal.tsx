@@ -88,6 +88,19 @@ export default function VideoModal({ videoId, onClose }: Props) {
     playerRef.current?.setVolume(v);
   };
 
+  const requestFullscreen = async () => {
+    const p = playerRef.current;
+    try {
+      if (p) await p.requestFullscreen();
+    } catch {
+      const el = iframeRef.current as
+        | (HTMLIFrameElement & { webkitRequestFullscreen?: () => void })
+        | null;
+      if (el?.requestFullscreen) el.requestFullscreen();
+      else if (el?.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    }
+  };
+
   if (!videoId) return null;
 
   const src = `https://player.vimeo.com/video/${videoId}?autoplay=1&controls=0&title=0&byline=0&portrait=0&dnt=1&playsinline=1`;
@@ -96,9 +109,10 @@ export default function VideoModal({ videoId, onClose }: Props) {
     <div className="vm-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div
         className={`vm-stage ${playing ? "" : "is-paused"} ${active ? "is-active" : ""}`}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); ping(); }}
         onMouseMove={ping}
         onMouseLeave={() => setActive(false)}
+        onTouchStart={ping}
       >
         <div className="vm-frame">
           <iframe
@@ -154,6 +168,12 @@ export default function VideoModal({ videoId, onClose }: Props) {
               className="vm-range"
             />
           </div>
+
+          <button className="vm-btn vm-fs" onClick={requestFullscreen} aria-label="Fullscreen" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
+              <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>

@@ -673,7 +673,26 @@ button.tile-media {
   border: 0;
 }
 @media (max-width: 760px) {
-  .vm-close { top: -38px; }
-  .vm-range { width: 80px; }
+  .vm-stage {
+    width: 100vw;
+    height: auto;
+  }
+  .vm-frame {
+    aspect-ratio: 16 / 9;
+    height: auto;
+  }
+  .vm-close {
+    top: 8px;
+    right: 8px;
+    width: 48px;
+    height: 48px;
+  }
+  .vm-close svg { width: 26px; height: 26px; }
+  .vm-controls { padding: 12px 14px; gap: 10px; }
+  .vm-btn { width: 44px; height: 44px; }
+  .vm-range { width: 70px; }
   .tile-media.is-video .play-overlay svg { width: 52px; height: 52px; padding: 14px; }
+  /* On touch devices, controls visible by default (no hover) */
+  .vm-stage .vm-controls { opacity: 1; pointer-events: auto; }
+  .vm-stage .vm-close { opacity: 0.9; pointer-events: auto; }
 }

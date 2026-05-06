@@ -12,7 +12,10 @@
       "Bash(curl *)",
       "Bash(git init *)",
       "Bash(git branch *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m 'Initial commit: Pierre Mouarkech portfolio site *)",
+      "Bash(git remote *)",
+      "Bash(git push *)"
     ]
   }
 }
