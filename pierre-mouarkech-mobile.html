@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Pierre Mouarkech — Director of Photography</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000000;
+    --fg: #ededed;
+    --accent: #ffe500;
+    --fg-dim: rgba(237, 237, 237, 0.65);
+    --fg-faint: rgba(237, 237, 237, 0.25);
+    --rule: rgba(237, 237, 237, 0.08);
+    --font-display: "Anton", "Helvetica Neue Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --pad-x: 16px; /* small left padding for labels */
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  /* ====== NAV — fixed top-right ====== */
+  .nav {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 100;
+    display: flex;
+    gap: 18px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fg);
+    mix-blend-mode: difference;
+  }
+  .nav a {
+    position: relative;
+    padding-bottom: 4px;
+  }
+  .nav a.active::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 1.5px;
+    background: currentColor;
+  }
+
+  /* ====== HERO — centered, stacked ====== */
+  .hero {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 16px 40px;
+    text-align: center;
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 17vw;
+    line-height: 0.86;
+    letter-spacing: 0;
+    margin: 0;
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+  .hero h1 .line {
+    display: block;
+    overflow: hidden;
+  }
+  .hero h1 .line span {
+    display: inline-block;
+    transform: translateY(110%);
+    animation: rise 1s cubic-bezier(0.2,0.8,0.2,1) forwards;
+  }
+  .hero h1 .line:nth-child(2) span { animation-delay: 0.12s; }
+  .hero .role {
+    /* Right-aligned under MOUARKECH per the screenshot */
+    align-self: flex-end;
+    margin: 8px 16px 0 0;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+    opacity: 0;
+    animation: fade .8s ease .5s forwards;
+  }
+
+  @keyframes rise { to { transform: translateY(0); } }
+  @keyframes fade { to { opacity: 1; } }
+
+  /* ====== WORK — single column, edge-to-edge tiles ====== */
+  #work {
+    padding: 40px 0 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .tile {
+    width: 100%;
+  }
+  .tile-media {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background: #0a0a0a;
+  }
+  .tile-media video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+  .tile-label {
+    padding: 12px var(--pad-x) 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .tile-label .client {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+  .tile-label .ttl {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+  }
+
+  /* ====== CONTACT ====== */
+  .contact {
+    padding: 60px 0 40px;
+  }
+  .contact h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 22vw;
+    line-height: 0.86;
+    letter-spacing: 0;
+    margin: 0 0 32px 0;
+    padding: 0 var(--pad-x);
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+  .agencies {
+    padding: 0 var(--pad-x);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .agency {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .agency .region {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 3px;
+  }
+  .agency a {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--fg);
+    width: fit-content;
+  }
+  .agency .phone {
+    color: var(--fg);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+  }
+
+  /* Portrait — full-width below agencies */
+  .portrait {
+    margin-top: 36px;
+    width: 100%;
+    aspect-ratio: 1.13;
+    background: radial-gradient(ellipse at 35% 45%, #2a1a14 0%, #0a0606 70%);
+    overflow: hidden;
+    position: relative;
+  }
+  .portrait::after {
+    content: "PORTRAIT — REPLACE WITH PHOTO";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.32em;
+    color: var(--fg-faint);
+    text-align: center;
+    padding: 0 16px;
+  }
+
+  /* ====== FOOTER ====== */
+  .foot {
+    padding: 32px var(--pad-x);
+    margin-top: 40px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#contact">Contact</a>
+  <a href="#work" class="active">Work</a>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <h1>
+    <span class="line"><span>Pierre</span></span>
+    <span class="line"><span>Mouarkech</span></span>
+  </h1>
+  <p class="role">Director of Photography</p>
+</header>
+
+<!-- WORK — single column, real aspect ratios from Canva -->
+<section id="work">
+
+  <div class="tile">
+    <div class="tile-media" style="aspect-ratio: 2.014;">
+      <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="tile-label">
+      <span class="client">Heineken</span>
+      <span class="ttl">The Cleaners</span>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="tile-media" style="aspect-ratio: 0.699;">
+      <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="tile-label">
+      <span class="client">McDonald's</span>
+      <span class="ttl">Fries</span>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="tile-media" style="aspect-ratio: 1.250;">
+      <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="tile-label">
+      <span class="client">Denner</span>
+      <span class="ttl">The Good Life (DC)</span>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="tile-media" style="aspect-ratio: 1.250;">
+      <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="tile-label">
+      <span class="client">Du</span>
+      <span class="ttl">The Men Sitting Next To You</span>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="tile-media" style="aspect-ratio: 0.695;">
+      <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="tile-label">
+      <span class="client">L'Occitane</span>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="tile-media" style="aspect-ratio: 1.865;">
+      <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="tile-label">
+      <span class="client">Molto Fino</span>
+      <span class="ttl">Feeds A Village</span>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="tile-media" style="aspect-ratio: 1.655;">
+      <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="tile-label">
+      <span class="client">Lavazza</span>
+      <span class="ttl">Alexa</span>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="tile-media" style="aspect-ratio: 1.519;">
+      <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="tile-label">
+      <span class="client">Rolling Stone</span>
+      <span class="ttl">Rockin' Mamas</span>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="tile-media" style="aspect-ratio: 1.865;">
+      <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="tile-label">
+      <span class="client">Diesel</span>
+      <span class="ttl">Be A Follower</span>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="tile-media" style="aspect-ratio: 0.670;">
+      <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" muted loop playsinline preload="metadata"></video>
+    </div>
+    <div class="tile-label">
+      <span class="client">Hardees</span>
+      <span class="ttl">Go All In</span>
+    </div>
+  </div>
+
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="contact">
+  <h2>Get in<br/>Touch</h2>
+  <div class="agencies">
+    <div class="agency">
+      <span class="region">Middle East</span>
+      <a href="mailto:contact@pierremouarkech.com">contact@pierremouarkech.com</a>
+    </div>
+    <div class="agency">
+      <span class="region">Switzerland . France . Spain</span>
+      <a href="mailto:hey@stunning-artists.com">hey@stunning-artists.com</a>
+      <span class="phone">+41 44 620 04 48</span>
+    </div>
+    <div class="agency">
+      <span class="region">Berlin</span>
+      <a href="mailto:berlin@trinityagency.de">berlin@trinityagency.de</a>
+      <span class="phone">+49 30 212 326 08</span>
+    </div>
+    <div class="agency">
+      <span class="region">Hamburg</span>
+      <a href="mailto:hamburg@trinityagency.de">hamburg@trinityagency.de</a>
+      <span class="phone">+49 40 6365 2128</span>
+    </div>
+  </div>
+  <div class="portrait"></div>
+</section>
+
+<footer class="foot">
+  <span>© Pierre Mouarkech</span>
+  <span>Director of Photography · Since 2005</span>
+</footer>
+
+<script>
+  // Lazy-play videos
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const v = entry.target;
+      if (entry.isIntersecting) v.play().catch(() => {});
+      else v.pause();
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('video').forEach(v => obs.observe(v));
+</script>
+
+</body>
+</html>

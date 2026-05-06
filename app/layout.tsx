@@ -1,0 +1,30 @@
+import type { Metadata } from "next";
+import { Anton, Inter_Tight } from "next/font/google";
+import "./globals.css";
+
+// TODO: replace Anton with the licensed Druk-style font from the Canva original.
+const anton = Anton({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-anton",
+  display: "swap",
+});
+
+const interTight = Inter_Tight({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-inter-tight",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Pierre Mouarkech — Director of Photography",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={`${anton.variable} ${interTight.variable}`}>
+      <body>{children}</body>
+    </html>
+  );
+}

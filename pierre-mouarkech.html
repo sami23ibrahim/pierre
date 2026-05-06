@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pierre Mouarkech — Director of Photography</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000000;
+    --fg: #ededed;
+    --accent: #ffe500;
+    --fg-dim: rgba(237, 237, 237, 0.65);
+    --fg-faint: rgba(237, 237, 237, 0.25);
+    --rule: rgba(237, 237, 237, 0.08);
+    --font-display: "Anton", "Helvetica Neue Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  /* Canvas — 1337.5pt design width mapped to viewport */
+  .canvas {
+    width: 100%;
+    max-width: 1366px;
+    margin: 0 auto;
+    container-type: inline-size;
+  }
+
+  /* ====== HERO ====== */
+  .hero {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1337.5 / 600;
+    min-height: 540px;
+    container-type: inline-size;
+  }
+  .hero h1 {
+    position: absolute;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 10cqw;
+    line-height: 0.85;
+    letter-spacing: 0;
+    margin: 0;
+    text-transform: uppercase;
+    color: var(--fg);
+    left: 5.76%;
+    top: 40.83%;
+    width: 63.63%;
+  }
+  .hero h1 .line { display: block; overflow: hidden; }
+  .hero h1 .line span {
+    display: inline-block;
+    transform: translateY(110%);
+    animation: rise 1s cubic-bezier(0.2,0.8,0.2,1) forwards;
+  }
+  .hero h1 .line:nth-child(2) span { animation-delay: 0.12s; }
+  .hero .role {
+    position: absolute;
+    left: 31.03%;
+    top: 83.00%;
+    margin: 0;
+    font-size: 1.2cqw;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+    opacity: 0;
+    animation: fade .8s ease .5s forwards;
+  }
+  .nav {
+    position: absolute;
+    left: 84.41%;
+    top: 12.83%;
+    z-index: 50;
+    display: flex;
+    gap: 24px;
+    font-size: 1cqw;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+  .nav a {
+    position: relative;
+    padding-bottom: 4px;
+    transition: opacity .3s ease;
+  }
+  .nav a.active::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 1.5px;
+    background: currentColor;
+  }
+  .nav a:hover { opacity: 0.6; }
+
+  @keyframes rise { to { transform: translateY(0); } }
+  @keyframes fade { to { opacity: 1; } }
+
+  /* ====== ROWS (project pairs) ====== */
+  .row {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1337.5 / 720;
+    container-type: inline-size;
+  }
+
+  .tile-media {
+    position: absolute;
+    overflow: hidden;
+    background: #0a0a0a;
+    cursor: pointer;
+  }
+  .tile-media video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .8s cubic-bezier(0.2,0.8,0.2,1), filter .6s ease;
+  }
+  .tile-media:hover video {
+    transform: scale(1.025);
+    filter: brightness(1.05);
+  }
+  .tile-label {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .tile-label .client {
+    font-size: 1cqw;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+  .tile-label .ttl {
+    font-size: 0.85cqw;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+  }
+
+  /* ====== CONTACT ====== */
+  .contact {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1337.5 / 740;
+    container-type: inline-size;
+    margin-top: 80px;
+  }
+  .contact h2 {
+    position: absolute;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 10cqw;
+    line-height: 0.85;
+    letter-spacing: 0;
+    margin: 0;
+    text-transform: uppercase;
+    color: var(--fg);
+    left: 2.17%;
+    top: 4.05%;
+    width: 35.59%;
+  }
+  .contact .portrait {
+    position: absolute;
+    left: 39.93%;
+    top: 4.05%;
+    width: 60.04%;
+    height: 95.81%;
+    background: radial-gradient(ellipse at 35% 45%, #2a1a14 0%, #0a0606 70%);
+    overflow: hidden;
+  }
+  .contact .portrait::after {
+    content: "PORTRAIT — REPLACE WITH PHOTO";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85cqw;
+    font-weight: 700;
+    letter-spacing: 0.32em;
+    color: var(--fg-faint);
+  }
+  .agency {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .agency .region {
+    font-size: 1cqw;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .agency a {
+    font-size: 0.95cqw;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--fg);
+    border-bottom: 1px solid transparent;
+    transition: border-color .3s ease;
+    width: fit-content;
+  }
+  .agency a:hover { border-bottom-color: var(--fg); }
+  .agency .phone {
+    color: var(--fg);
+    font-size: 0.95cqw;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+  }
+
+  /* ====== FOOTER ====== */
+  .foot {
+    padding: 32px 24px;
+    margin-top: 40px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+  }
+
+  /* ====== MOBILE ====== */
+  @media (max-width: 760px) {
+    .hero h1 { font-size: 14cqw; }
+    .hero .role { font-size: 2.2cqw; }
+    .nav { font-size: 2cqw; gap: 12px; }
+    .tile-label .client { font-size: 1.8cqw; }
+    .tile-label .ttl { font-size: 1.5cqw; }
+    .contact h2 { font-size: 14cqw; }
+    .agency .region, .agency a, .agency .phone { font-size: 1.6cqw; }
+    .foot { font-size: 9px; gap: 8px; flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+
+  <!-- HERO -->
+  <header class="hero">
+    <nav class="nav">
+      <a href="#contact">Contact</a>
+      <a href="#work" class="active">Work</a>
+    </nav>
+    <h1>
+      <span class="line"><span>Pierre</span></span>
+      <span class="line"><span>Mouarkech</span></span>
+    </h1>
+    <p class="role">director of photography</p>
+  </header>
+
+  <!-- WORK -->
+  <section id="work">
+
+    <!-- ROW 1: Heineken / McDonald's -->
+    <div class="row">
+      <div class="tile-media" style="left: 1.65%; top: 30.97%; width: 62.35%; height: 57.50%;">
+        <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" muted loop playsinline preload="metadata"></video>
+      </div>
+      <div class="tile-label" style="left: 1.87%; top: 89.86%; width: 62.35%;">
+        <span class="client">Heineken</span>
+        <span class="ttl">The Cleaners</span>
+      </div>
+
+      <div class="tile-media" style="left: 66.39%; top: 2.22%; width: 33.50%; height: 89.03%;">
+        <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" muted loop playsinline preload="metadata"></video>
+      </div>
+      <div class="tile-label" style="left: 66.39%; top: 92.64%; width: 33.50%;">
+        <span class="client">McDonald's</span>
+        <span class="ttl">Fries</span>
+      </div>
+    </div>
+
+    <!-- ROW 2: Denner / Du -->
+    <div class="row">
+      <div class="tile-media" style="left: 1.65%; top: 2.22%; width: 39.63%; height: 58.89%;">
+        <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" muted loop playsinline preload="metadata"></video>
+      </div>
+      <div class="tile-label" style="left: 1.65%; top: 62.64%; width: 39.63%;">
+        <span class="client">Denner</span>
+        <span class="ttl">The Good Life (DC)</span>
+      </div>
+
+      <div class="tile-media" style="left: 43.14%; top: 7.36%; width: 56.82%; height: 84.44%;">
+        <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" muted loop playsinline preload="metadata"></video>
+      </div>
+      <div class="tile-label" style="left: 43.14%; top: 92.22%; width: 56.82%;">
+        <span class="client">Du</span>
+        <span class="ttl">The Men Sitting Next To You</span>
+      </div>
+    </div>
+
+    <!-- ROW 3: L'Occitane / Molto Fino -->
+    <div class="row">
+      <div class="tile-media" style="left: 1.65%; top: 2.22%; width: 33.36%; height: 89.03%;">
+        <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" muted loop playsinline preload="metadata"></video>
+      </div>
+      <div class="tile-label" style="left: 1.65%; top: 92.64%; width: 33.36%;">
+        <span class="client">L'Occitane</span>
+      </div>
+
+      <div class="tile-media" style="left: 36.49%; top: 28.06%; width: 63.55%; height: 63.33%;">
+        <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" muted loop playsinline preload="metadata"></video>
+      </div>
+      <div class="tile-label" style="left: 36.49%; top: 92.64%; width: 63.55%;">
+        <span class="client">Molto Fino</span>
+        <span class="ttl">Feeds A Village</span>
+      </div>
+    </div>
+
+    <!-- ROW 4: Lavazza / Rolling Stone -->
+    <div class="row">
+      <div class="tile-media" style="left: 2.17%; top: 5.69%; width: 56.82%; height: 63.75%;">
+        <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" muted loop playsinline preload="metadata"></video>
+      </div>
+      <div class="tile-label" style="left: 2.17%; top: 70.83%; width: 56.82%;">
+        <span class="client">Lavazza</span>
+        <span class="ttl">Alexa</span>
+      </div>
+
+      <div class="tile-media" style="left: 61.23%; top: 39.86%; width: 38.66%; height: 47.22%;">
+        <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" muted loop playsinline preload="metadata"></video>
+      </div>
+      <div class="tile-label" style="left: 61.23%; top: 88.47%; width: 38.66%;">
+        <span class="client">Rolling Stone</span>
+        <span class="ttl">Rockin' Mamas</span>
+      </div>
+    </div>
+
+    <!-- ROW 5: Diesel / Hardees -->
+    <div class="row">
+      <div class="tile-media" style="left: 2.17%; top: 17.08%; width: 63.55%; height: 63.33%;">
+        <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" muted loop playsinline preload="metadata"></video>
+      </div>
+      <div class="tile-label" style="left: 2.17%; top: 81.81%; width: 63.55%;">
+        <span class="client">Diesel</span>
+        <span class="ttl">Be A Follower</span>
+      </div>
+
+      <div class="tile-media" style="left: 67.81%; top: 2.22%; width: 32.09%; height: 89.03%;">
+        <video src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" muted loop playsinline preload="metadata"></video>
+      </div>
+      <div class="tile-label" style="left: 67.81%; top: 92.64%; width: 32.09%;">
+        <span class="client">Hardees</span>
+        <span class="ttl">Go All In</span>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="contact">
+    <h2>Get in<br/>touch</h2>
+    <div class="portrait"></div>
+
+    <div class="agency" style="left: 2.17%; top: 47.03%; width: 35.59%;">
+      <span class="region">MIDDLE EAST</span>
+      <a href="mailto:contact@pierremouarkech.com">Contact@pierremouarkech.com</a>
+    </div>
+    <div class="agency" style="left: 2.17%; top: 58.38%; width: 35.59%;">
+      <span class="region">SWITZERLAND . FRANCE . SPAIN</span>
+      <a href="mailto:hey@stunning-artists.com">hey@stunning-artists.com</a>
+      <span class="phone">+41 44 620 04 48</span>
+    </div>
+    <div class="agency" style="left: 2.17%; top: 73.38%; width: 35.59%;">
+      <span class="region">Berlin</span>
+      <a href="mailto:berlin@trinityagency.de">BERLIN@TRINITYAGENCY.DE</a>
+      <span class="phone">+49 30 212 326 08</span>
+    </div>
+    <div class="agency" style="left: 2.17%; top: 86.76%; width: 35.59%;">
+      <span class="region">Hamburg</span>
+      <a href="mailto:hamburg@trinityagency.de">HAMBURG@TRINITYAGENCY.DE</a>
+      <span class="phone">+49 40 6365 2128</span>
+    </div>
+  </section>
+
+</div>
+
+<footer class="foot">
+  <span>© Pierre Mouarkech</span>
+  <span>Director of Photography · Since 2005</span>
+</footer>
+
+<script>
+  // Lazy-play videos when scrolled into view, pause when out
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const v = entry.target;
+      if (entry.isIntersecting) v.play().catch(() => {});
+      else v.pause();
+    });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('video').forEach(v => obs.observe(v));
+</script>
+
+</body>
+</html>
