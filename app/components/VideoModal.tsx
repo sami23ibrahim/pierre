@@ -8,6 +8,20 @@ type Props = {
   onClose: () => void;
 };
 
+const TOUCH_QUERY = "(hover: none) and (pointer: coarse)";
+
+function useIsTouchDevice() {
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(TOUCH_QUERY);
+    setIsTouch(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsTouch(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return isTouch;
+}
+
 export default function VideoModal({ videoId, onClose }: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const playerRef = useRef<Player | null>(null);
@@ -17,11 +31,13 @@ export default function VideoModal({ videoId, onClose }: Props) {
   const [active, setActive] = useState(true);
   const [cssFullscreen, setCssFullscreen] = useState(false);
   const idleTimerRef = useRef<number | null>(null);
+  const isTouch = useIsTouchDevice();
 
   const ping = () => {
     setActive(true);
     if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
-    idleTimerRef.current = window.setTimeout(() => setActive(false), 2200);
+    const idleMs = isTouch ? 3000 : 2200;
+    idleTimerRef.current = window.setTimeout(() => setActive(false), idleMs);
   };
 
   useEffect(() => {
@@ -49,7 +65,10 @@ export default function VideoModal({ videoId, onClose }: Props) {
   useEffect(() => {
     if (!videoId) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (cssFullscreen) setCssFullscreen(false);
+        else onClose();
+      }
       if (e.key === " ") {
         e.preventDefault();
         togglePlay();
@@ -68,7 +87,18 @@ export default function VideoModal({ videoId, onClose }: Props) {
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoId, onClose]);
+  }, [videoId, onClose, cssFullscreen]);
+
+  useEffect(() => {
+    if (!cssFullscreen) return;
+    window.history.pushState({ vmFs: true }, "");
+    const onPop = () => setCssFullscreen(false);
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      if (window.history.state?.vmFs) window.history.back();
+    };
+  }, [cssFullscreen]);
 
   const togglePlay = async () => {
     const p = playerRef.current;
@@ -91,8 +121,7 @@ export default function VideoModal({ videoId, onClose }: Props) {
   };
 
   const requestFullscreen = async () => {
-    const isMobile = window.matchMedia("(max-width: 760px)").matches;
-    if (isMobile) {
+    if (isTouch) {
       setCssFullscreen((prev) => !prev);
       ping();
       return;
@@ -120,20 +149,20 @@ export default function VideoModal({ videoId, onClose }: Props) {
         onClick={(e) => { e.stopPropagation(); ping(); }}
         onMouseMove={ping}
         onMouseLeave={() => setActive(false)}
-        onTouchStart={ping}
+        onTouchEnd={ping}
       >
         <div className="vm-frame">
           <iframe
             ref={iframeRef}
             src={src}
-            allow="autoplay; fullscreen; picture-in-picture"
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
             allowFullScreen
             title="Video"
           />
           <div
             className="vm-touch-layer"
             onClick={ping}
-            onTouchStart={ping}
+            onTouchEnd={ping}
             aria-hidden
           />
           <button className="vm-close" onClick={onClose} aria-label="Close" type="button">

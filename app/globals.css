@@ -698,8 +698,27 @@ button.tile-media {
   .vm-btn { width: 44px; height: 44px; }
   .vm-range { width: 70px; }
   .tile-media.is-video .play-overlay svg { width: 52px; height: 52px; padding: 14px; }
+}
 
-  /* CSS-only fullscreen on mobile — toggled by the fullscreen button */
+/* Touch-input devices: snappier taps, no tap highlight, safe-area aware,
+   and CSS-fullscreen sizing that works in any orientation. */
+@media (hover: none) and (pointer: coarse) {
+  .vm-btn,
+  .vm-close,
+  .vm-touch-layer,
+  .vm-range {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .vm-controls {
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .vm-close {
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+  }
   .vm-stage.is-fs {
     width: 100vw;
     height: 100vh;
@@ -711,10 +730,9 @@ button.tile-media {
   }
 }
 
-/* When fullscreen on a portrait phone, rotate the player 90° so the video
-   looks landscape regardless of phone orientation. Rotating the phone CW
-   un-rotates the player in the user's view. */
-@media (max-width: 760px) and (orientation: portrait) {
+/* When fullscreen on a portrait touch device, rotate the player 90° so the
+   video looks landscape. Rotating the device CW un-rotates it visually. */
+@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
   .vm-stage.is-fs {
     position: fixed;
     width: 100vh;

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Anton, Inter_Tight } from "next/font/google";
 import "./globals.css";
 
@@ -19,6 +19,12 @@ const interTight = Inter_Tight({
 
 export const metadata: Metadata = {
   title: "Pierre Mouarkech — Director of Photography",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
