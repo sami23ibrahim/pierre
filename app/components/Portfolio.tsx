@@ -18,6 +18,7 @@ const PlayIcon = () => (
 
 export default function Portfolio({ thumbnails }: Props) {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<"work" | "contact">("work");
   const open = (id: string) => () => setActiveVideo(id);
   const thumb = (id: string, fallback: string) => thumbnails[id] || fallback;
 
@@ -40,16 +41,40 @@ export default function Portfolio({ thumbnails }: Props) {
     return () => observer.disconnect();
   }, []);
 
+  // Scroll-spy for the nav underline. Watches both contact sections — only the
+  // one visible in the current layout will ever report intersecting (the other
+  // is display:none, so its bounding rect is empty).
+  useEffect(() => {
+    const desktopContact = document.getElementById("contact");
+    const mobileContact = document.getElementById("contact-m");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const inView = entries.some((e) => e.isIntersecting);
+        setActiveSection(inView ? "contact" : "work");
+      },
+      { rootMargin: "-30% 0px -30% 0px", threshold: 0 }
+    );
+    if (desktopContact) observer.observe(desktopContact);
+    if (mobileContact) observer.observe(mobileContact);
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollToTop = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setActiveSection("work");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <>
       {/* ===================== DESKTOP ===================== */}
       <div className="layout layout-desktop">
+        <nav className="nav">
+          <a href="#contact" className={activeSection === "contact" ? "active" : ""}>Contact</a>
+          <a href="#work" className={activeSection === "work" ? "active" : ""} onClick={scrollToTop}>Work</a>
+        </nav>
         <div className="canvas">
           <header className="hero">
-            <nav className="nav">
-              <a href="#contact">Contact</a>
-              <a href="#work" className="active">Work</a>
-            </nav>
             <div className="hero-text">
               <h1>
                 <span className="line"><span>Pierre</span></span>
@@ -267,8 +292,8 @@ export default function Portfolio({ thumbnails }: Props) {
       {/* ===================== MOBILE ===================== */}
       <div className="layout layout-mobile">
         <nav className="nav">
-          <a href="#contact">Contact</a>
-          <a href="#work" className="active">Work</a>
+          <a href="#contact-m" className={activeSection === "contact" ? "active" : ""}>Contact</a>
+          <a href="#work-m" className={activeSection === "work" ? "active" : ""} onClick={scrollToTop}>Work</a>
         </nav>
 
         <header className="hero">
@@ -281,7 +306,7 @@ export default function Portfolio({ thumbnails }: Props) {
           </div>
         </header>
 
-        <section id="work">
+        <section id="work-m">
           <div className="tile">
             <button
               type="button"
@@ -452,7 +477,7 @@ export default function Portfolio({ thumbnails }: Props) {
           </div>
         </section>
 
-        <section id="contact" className="contact">
+        <section id="contact-m" className="contact">
           <h2>
             <span className="line"><span>Get in</span></span>
             <span className="line"><span>Touch</span></span>

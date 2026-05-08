@@ -25,11 +25,13 @@ function useIsTouchDevice() {
 export default function VideoModal({ videoId, onClose }: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const playerRef = useRef<Player | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
   const [active, setActive] = useState(true);
   const [cssFullscreen, setCssFullscreen] = useState(false);
+  const [nativeFs, setNativeFs] = useState(false);
   const idleTimerRef = useRef<number | null>(null);
   const isTouch = useIsTouchDevice();
 
@@ -62,11 +64,28 @@ export default function VideoModal({ videoId, onClose }: Props) {
     };
   }, [videoId]);
 
+  // Track native fullscreen state — fires when user enters/exits via any path
+  // (the [] button, ESC, hardware back, browser UI, etc.)
+  useEffect(() => {
+    const onChange = () => {
+      const doc = document as Document & { webkitFullscreenElement?: Element | null };
+      const el = document.fullscreenElement || doc.webkitFullscreenElement;
+      setNativeFs(!!el);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
+  }, []);
+
   useEffect(() => {
     if (!videoId) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (cssFullscreen) setCssFullscreen(false);
+        else if (nativeFs) return; // browser handles ESC → exits FS, don't also close modal
         else onClose();
       }
       if (e.key === " ") {
@@ -87,7 +106,7 @@ export default function VideoModal({ videoId, onClose }: Props) {
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoId, onClose, cssFullscreen]);
+  }, [videoId, onClose, cssFullscreen, nativeFs]);
 
   useEffect(() => {
     if (!cssFullscreen) return;
@@ -99,6 +118,44 @@ export default function VideoModal({ videoId, onClose }: Props) {
       if (window.history.state?.vmFs) window.history.back();
     };
   }, [cssFullscreen]);
+
+  // Browser back / iOS swipe-back closes the modal first instead of leaving the
+  // page. Push a history entry when the modal opens; pop it on close.
+  // onClose is read through a ref so a parent re-render (which produces a fresh
+  // arrow function) doesn't cause this effect to re-run and thrash history.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!videoId) return;
+
+    let userPopped = false;
+    window.history.pushState({ vmModal: true }, "");
+
+    const onPop = () => {
+      // If user is in native fullscreen, browsers normally exit FS without
+      // firing popstate — but if it does fire, re-push so back-out-of-FS
+      // doesn't also close the modal.
+      const doc = document as Document & { webkitFullscreenElement?: Element | null };
+      if (document.fullscreenElement || doc.webkitFullscreenElement) {
+        window.history.pushState({ vmModal: true }, "");
+        return;
+      }
+      userPopped = true;
+      onCloseRef.current();
+    };
+    window.addEventListener("popstate", onPop);
+
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      const state = window.history.state as { vmModal?: boolean } | null;
+      if (!userPopped && state?.vmModal) {
+        window.history.back();
+      }
+    };
+  }, [videoId]);
 
   const togglePlay = async () => {
     const p = playerRef.current;
@@ -122,10 +179,56 @@ export default function VideoModal({ videoId, onClose }: Props) {
 
   const requestFullscreen = async () => {
     if (isTouch) {
-      setCssFullscreen((prev) => !prev);
-      ping();
+      // OLD MOBILE FULLSCREEN — CSS-based hack. Kept commented as a fallback.
+      // setCssFullscreen((prev) => !prev);
+      // ping();
+      // return;
+
+      // NEW: native fullscreen on the .vm-stage wrapper.
+      // Wrapping both the iframe AND our React controls means both go fullscreen
+      // together (the previous bug was calling FS on the iframe alone).
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      const doc = document as Document & {
+        webkitFullscreenElement?: Element | null;
+        webkitExitFullscreen?: () => Promise<void>;
+      };
+      const inFs = document.fullscreenElement || doc.webkitFullscreenElement;
+      if (inFs) {
+        try {
+          if (document.exitFullscreen) await document.exitFullscreen();
+          else if (doc.webkitExitFullscreen) await doc.webkitExitFullscreen();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+
+      try {
+        const el = stage as HTMLDivElement & {
+          webkitRequestFullscreen?: () => Promise<void>;
+        };
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+
+        // Best-effort orientation lock — Android honors it, iOS rejects (silently fine).
+        const orient = (screen as Screen & {
+          orientation?: { lock?: (o: string) => Promise<void> };
+        }).orientation;
+        try {
+          if (orient?.lock) await orient.lock("landscape");
+        } catch {
+          /* iOS will reject — that's expected */
+        }
+        ping();
+      } catch (err) {
+        console.warn("Native fullscreen failed:", err);
+      }
       return;
     }
+
+    // DESKTOP — UNCHANGED
     const p = playerRef.current;
     try {
       if (p) await p.requestFullscreen();
@@ -145,6 +248,7 @@ export default function VideoModal({ videoId, onClose }: Props) {
   return (
     <div className="vm-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div
+        ref={stageRef}
         className={`vm-stage ${playing ? "" : "is-paused"} ${active ? "is-active" : ""} ${cssFullscreen ? "is-fs" : ""}`}
         onClick={(e) => { e.stopPropagation(); ping(); }}
         onMouseMove={ping}
@@ -212,9 +316,18 @@ export default function VideoModal({ videoId, onClose }: Props) {
             />
           </div>
 
-          <button className="vm-btn vm-fs" onClick={requestFullscreen} aria-label="Fullscreen" type="button">
+          <button
+            className="vm-btn vm-fs"
+            onClick={requestFullscreen}
+            aria-label={nativeFs || cssFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            type="button"
+          >
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
-              <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              {nativeFs || cssFullscreen ? (
+                <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              ) : (
+                <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              )}
             </svg>
           </button>
         </div>

@@ -12,6 +12,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 body {
   background: var(--bg);
   color: var(--fg);
@@ -87,17 +90,18 @@ a { color: inherit; text-decoration: none; }
   animation: fade .8s ease .5s forwards;
 }
 .layout-desktop .nav {
-  position: absolute;
-  left: 84.41%;
-  top: 12.83%;
-  z-index: 50;
+  position: fixed;
+  top: 28px;
+  right: 32px;
+  z-index: 100;
   display: flex;
   gap: 24px;
-  font-size: 1cqw;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--fg);
+  mix-blend-mode: difference;
 }
 .layout-desktop .nav a {
   position: relative;
@@ -296,6 +300,7 @@ a { color: inherit; text-decoration: none; }
   margin: 0;
   text-transform: uppercase;
   color: var(--fg);
+  text-align: left;
 }
 .layout-mobile .hero h1 .line {
   display: block;
@@ -323,7 +328,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* WORK — single column, with side padding so images have black margin */
-.layout-mobile #work {
+.layout-mobile #work-m {
   padding: 40px var(--pad-x) 60px;
   display: flex;
   flex-direction: column;
@@ -719,6 +724,7 @@ button.tile-media {
     top: max(8px, env(safe-area-inset-top));
     right: max(8px, env(safe-area-inset-right));
   }
+  /* OLD MOBILE FULLSCREEN — CSS hack, kept commented as fallback.
   .vm-stage.is-fs {
     width: 100vw;
     height: 100vh;
@@ -728,10 +734,10 @@ button.tile-media {
     height: 100vh;
     aspect-ratio: auto;
   }
+  */
 }
 
-/* When fullscreen on a portrait touch device, rotate the player 90° so the
-   video looks landscape. Rotating the device CW un-rotates it visually. */
+/* OLD MOBILE FULLSCREEN — portrait 90° rotation hack, kept commented as fallback.
 @media (hover: none) and (pointer: coarse) and (orientation: portrait) {
   .vm-stage.is-fs {
     position: fixed;
@@ -745,5 +751,78 @@ button.tile-media {
     width: 100%;
     height: 100%;
     aspect-ratio: auto;
+  }
+}
+*/
+
+/* NEW MOBILE FULLSCREEN — native Fullscreen API on the .vm-stage wrapper.
+   Both the iframe and our React controls are inside the wrapper, so both
+   go fullscreen together. The :fullscreen pseudo-class applies whenever the
+   element is the fullscreen target (Android/iOS 16.4+). The vendor-prefixed
+   :-webkit-full-screen rule is split into its own block — combining the two
+   selectors with a comma would invalidate the rule in older browsers. */
+.vm-stage:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+}
+.vm-stage:fullscreen .vm-frame {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+.vm-stage:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+}
+.vm-stage:-webkit-full-screen .vm-frame {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+/* In fullscreen, push the controls and close button inward from the screen
+   edges. Phones with rounded corners / notches / home indicators clip content
+   right at the edge, so we use larger constants and respect safe-area insets. */
+.vm-stage:fullscreen .vm-controls {
+  padding-left: max(28px, env(safe-area-inset-left));
+  padding-right: max(28px, env(safe-area-inset-right));
+  padding-bottom: max(22px, env(safe-area-inset-bottom));
+  padding-top: 18px;
+}
+.vm-stage:fullscreen .vm-close {
+  top: max(22px, env(safe-area-inset-top));
+  right: max(22px, env(safe-area-inset-right));
+}
+.vm-stage:-webkit-full-screen .vm-controls {
+  padding-left: max(28px, env(safe-area-inset-left));
+  padding-right: max(28px, env(safe-area-inset-right));
+  padding-bottom: max(22px, env(safe-area-inset-bottom));
+  padding-top: 18px;
+}
+.vm-stage:-webkit-full-screen .vm-close {
+  top: max(22px, env(safe-area-inset-top));
+  right: max(22px, env(safe-area-inset-right));
+}
+
+/* iOS in portrait: Apple blocks screen.orientation.lock(), so when the user
+   enters fullscreen on an iPhone in portrait we rotate the wrapper 90° so the
+   16:9 video fills the screen. If the user physically rotates to landscape,
+   the orientation media query stops matching and the rotation drops cleanly. */
+@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
+  .vm-stage:fullscreen {
+    width: 100vh;
+    height: 100vw;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+  .vm-stage:-webkit-full-screen {
+    width: 100vh;
+    height: 100vw;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
   }
 }
