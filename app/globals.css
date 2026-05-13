@@ -724,7 +724,8 @@ button.tile-media {
     top: max(8px, env(safe-area-inset-top));
     right: max(8px, env(safe-area-inset-right));
   }
-  /* OLD MOBILE FULLSCREEN — CSS hack, kept commented as fallback.
+  /* CSS fullscreen fallback — used on iPhone Safari, which doesn't support the
+     Fullscreen API on non-<video> elements. Toggled by the .is-fs class. */
   .vm-stage.is-fs {
     width: 100vw;
     height: 100vh;
@@ -734,10 +735,10 @@ button.tile-media {
     height: 100vh;
     aspect-ratio: auto;
   }
-  */
 }
 
-/* OLD MOBILE FULLSCREEN — portrait 90° rotation hack, kept commented as fallback.
+/* iPhone in portrait: rotate the CSS-fullscreen wrapper 90° so the 16:9 video
+   fills the screen. Drops cleanly when the user physically rotates. */
 @media (hover: none) and (pointer: coarse) and (orientation: portrait) {
   .vm-stage.is-fs {
     position: fixed;
@@ -753,7 +754,6 @@ button.tile-media {
     aspect-ratio: auto;
   }
 }
-*/
 
 /* NEW MOBILE FULLSCREEN — native Fullscreen API on the .vm-stage wrapper.
    Both the iframe and our React controls are inside the wrapper, so both

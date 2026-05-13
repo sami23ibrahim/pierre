@@ -108,15 +108,11 @@ export default function VideoModal({ videoId, onClose }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId, onClose, cssFullscreen, nativeFs]);
 
+  // Mirror cssFullscreen into a ref so the modal popstate handler can read the
+  // current value synchronously (the handler's closure captures stale state).
+  const cssFullscreenRef = useRef(false);
   useEffect(() => {
-    if (!cssFullscreen) return;
-    window.history.pushState({ vmFs: true }, "");
-    const onPop = () => setCssFullscreen(false);
-    window.addEventListener("popstate", onPop);
-    return () => {
-      window.removeEventListener("popstate", onPop);
-      if (window.history.state?.vmFs) window.history.back();
-    };
+    cssFullscreenRef.current = cssFullscreen;
   }, [cssFullscreen]);
 
   // Browser back / iOS swipe-back closes the modal first instead of leaving the
@@ -135,6 +131,13 @@ export default function VideoModal({ videoId, onClose }: Props) {
     window.history.pushState({ vmModal: true }, "");
 
     const onPop = () => {
+      // iPhone CSS-fullscreen fallback path: back gesture should exit CSS-FS
+      // first, not close the whole modal.
+      if (cssFullscreenRef.current) {
+        setCssFullscreen(false);
+        window.history.pushState({ vmModal: true }, "");
+        return;
+      }
       // If user is in native fullscreen, browsers normally exit FS without
       // firing popstate — but if it does fire, re-push so back-out-of-FS
       // doesn't also close the modal.
@@ -179,21 +182,28 @@ export default function VideoModal({ videoId, onClose }: Props) {
 
   const requestFullscreen = async () => {
     if (isTouch) {
-      // OLD MOBILE FULLSCREEN — CSS-based hack. Kept commented as a fallback.
-      // setCssFullscreen((prev) => !prev);
-      // ping();
-      // return;
-
-      // NEW: native fullscreen on the .vm-stage wrapper.
-      // Wrapping both the iframe AND our React controls means both go fullscreen
-      // together (the previous bug was calling FS on the iframe alone).
-      const stage = stageRef.current;
-      if (!stage) return;
-
       const doc = document as Document & {
+        webkitFullscreenEnabled?: boolean;
         webkitFullscreenElement?: Element | null;
         webkitExitFullscreen?: () => Promise<void>;
       };
+
+      // iPhone Safari doesn't expose the Fullscreen API on non-<video> elements
+      // (only HTMLVideoElement.webkitEnterFullscreen). Fall back to CSS-class
+      // fullscreen there. iPad / Android keep the native path below.
+      const fsSupported = document.fullscreenEnabled || doc.webkitFullscreenEnabled;
+      if (!fsSupported) {
+        setCssFullscreen((prev) => !prev);
+        ping();
+        return;
+      }
+
+      // Native fullscreen on the .vm-stage wrapper. Wrapping both the iframe AND
+      // our React controls means both go fullscreen together (the previous bug
+      // was calling FS on the iframe alone).
+      const stage = stageRef.current;
+      if (!stage) return;
+
       const inFs = document.fullscreenElement || doc.webkitFullscreenElement;
       if (inFs) {
         try {
