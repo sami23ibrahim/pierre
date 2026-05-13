@@ -622,6 +622,27 @@ button.tile-media {
 .vm-close:hover { opacity: 1 !important; transform: scale(1.05); }
 .vm-stage:not(.is-active):not(.is-paused) { cursor: none; }
 
+/* iOS tap-to-play overlay — shown when the video isn't playing on Apple
+   devices. The tap on this button is the user gesture iOS needs to start
+   playback with sound. */
+.vm-play-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 0;
+  cursor: pointer;
+  color: #fff;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.vm-play-overlay svg {
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.5));
+}
+
 .vm-controls {
   position: absolute;
   left: 0;

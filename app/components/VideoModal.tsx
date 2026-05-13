@@ -22,6 +22,20 @@ function useIsTouchDevice() {
   return isTouch;
 }
 
+// Detect iOS specifically (iPhone, iPad including iPadOS desktop-mode spoofing).
+// Used to opt out of autoplay so the user's tap-to-play gesture can unlock audio
+// — iOS Safari blocks autoplay-with-sound at the OS level.
+function useIsIOS() {
+  const [isIOS, setIsIOS] = useState(false);
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const iPadOSDesktopMode =
+      navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+    setIsIOS(/iPad|iPhone|iPod/.test(ua) || iPadOSDesktopMode);
+  }, []);
+  return isIOS;
+}
+
 export default function VideoModal({ videoId, onClose }: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const playerRef = useRef<Player | null>(null);
@@ -34,6 +48,7 @@ export default function VideoModal({ videoId, onClose }: Props) {
   const [nativeFs, setNativeFs] = useState(false);
   const idleTimerRef = useRef<number | null>(null);
   const isTouch = useIsTouchDevice();
+  const isIOS = useIsIOS();
 
   const ping = () => {
     setActive(true);
@@ -51,20 +66,20 @@ export default function VideoModal({ videoId, onClose }: Props) {
     player.on("play", () => setPlaying(true));
     player.on("pause", () => setPlaying(false));
     player.on("ended", () => setPlaying(false));
+    // Only track volume here. On iOS the muted flag and volume value are
+    // independent (Vimeo can mute without setting volume to 0), so muted is
+    // tracked separately — updated by toggleMute, onVolumeChange, and the
+    // getMuted() sync below.
     player.on("volumechange", ({ volume: v }: { volume: number }) => {
       setVolume(v);
-      setMuted(v === 0);
     });
 
-    // iOS auto-mutes on autoplay without dropping volume to 0, so volumechange
-    // may report v=1 while the underlying <video>.muted flag is true. Sync the
-    // muted state directly once the player is ready.
+    // Pull the real muted flag from Vimeo on ready so the speaker icon reflects
+    // iOS auto-mute correctly (volumechange alone won't tell us).
     player
       .ready()
       .then(() => player.getMuted())
-      .then((m: boolean) => {
-        if (m) setMuted(true);
-      })
+      .then(setMuted)
       .catch(() => {});
 
     return () => {
@@ -171,25 +186,26 @@ export default function VideoModal({ videoId, onClose }: Props) {
     };
   }, [videoId]);
 
-  const togglePlay = async () => {
+  // All player commands are sent synchronously to preserve the iOS user-gesture
+  // context (any `await` between calls spends the gesture and breaks audio
+  // unlock / play). Vimeo issue #793: setMuted pauses autoplay videos on iOS,
+  // so a play() call always follows mute toggles to resume.
+
+  const togglePlay = () => {
     const p = playerRef.current;
     if (!p) return;
-    const isPaused = await p.getPaused();
-    if (isPaused) p.play();
-    else p.pause();
+    if (playing) p.pause();
+    else p.play().catch(() => {});
   };
 
-  const toggleMute = async () => {
+  const toggleMute = () => {
     const p = playerRef.current;
     if (!p) return;
-    if (muted || volume === 0) {
-      // iOS Safari: setVolume alone doesn't clear the underlying <video>.muted
-      // flag that Vimeo sets during autoplay. setMuted is required.
-      await p.setMuted(false);
-      if (volume === 0) await p.setVolume(1);
-    } else {
-      await p.setMuted(true);
-    }
+    const next = !muted;
+    p.setMuted(next);
+    if (!next && volume === 0) p.setVolume(1);
+    p.play().catch(() => {});
+    setMuted(next);
   };
 
   const onVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -197,9 +213,10 @@ export default function VideoModal({ videoId, onClose }: Props) {
     const p = playerRef.current;
     if (!p) return;
     p.setVolume(v);
-    // Keep muted flag aligned with volume so iOS doesn't stay silent at v>0
-    // after an autoplay auto-mute.
     p.setMuted(v === 0);
+    if (v > 0) p.play().catch(() => {});
+    setVolume(v);
+    setMuted(v === 0);
   };
 
   const requestFullscreen = async () => {
@@ -275,7 +292,11 @@ export default function VideoModal({ videoId, onClose }: Props) {
 
   if (!videoId) return null;
 
-  const src = `https://player.vimeo.com/video/${videoId}?autoplay=1&controls=0&title=0&byline=0&portrait=0&dnt=1&playsinline=1`;
+  // iOS blocks autoplay-with-sound at the OS level. We skip autoplay there so
+  // the user's tap on the play overlay is the gesture that unlocks audio.
+  // Desktop and Android keep autoplay.
+  const autoplayParam = isIOS ? "" : "autoplay=1&";
+  const src = `https://player.vimeo.com/video/${videoId}?${autoplayParam}controls=0&title=0&byline=0&portrait=0&dnt=1&playsinline=1`;
 
   return (
     <div className="vm-backdrop" onClick={onClose} role="dialog" aria-modal="true">
@@ -301,6 +322,18 @@ export default function VideoModal({ videoId, onClose }: Props) {
             onTouchEnd={ping}
             aria-hidden
           />
+          {isIOS && !playing && (
+            <button
+              className="vm-play-overlay"
+              onClick={togglePlay}
+              aria-label="Play"
+              type="button"
+            >
+              <svg viewBox="0 0 24 24" width="84" height="84" aria-hidden>
+                <path d="M7 5v14l12-7L7 5z" fill="currentColor" />
+              </svg>
+            </button>
+          )}
           <button className="vm-close" onClick={onClose} aria-label="Close" type="button">
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
               <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
