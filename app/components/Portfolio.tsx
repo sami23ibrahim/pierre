@@ -19,8 +19,31 @@ const PlayIcon = () => (
 export default function Portfolio({ thumbnails }: Props) {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"work" | "contact">("work");
+  const [navHidden, setNavHidden] = useState(false);
   const open = (id: string) => () => setActiveVideo(id);
   const thumb = (id: string, fallback: string) => thumbnails[id] || fallback;
+
+  // Mobile: hide the floating nav when scrolling down, reveal it when scrolling
+  // up. Near the top of the page the nav stays visible regardless of direction.
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const delta = y - lastY;
+        if (y < 80) setNavHidden(false);
+        else if (delta > 4) setNavHidden(true);
+        else if (delta < -4) setNavHidden(false);
+        lastY = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const targets = document.querySelectorAll(
@@ -291,7 +314,7 @@ export default function Portfolio({ thumbnails }: Props) {
 
       {/* ===================== MOBILE ===================== */}
       <div className="layout layout-mobile">
-        <nav className="nav">
+        <nav className={`nav ${navHidden ? "is-hidden" : ""}`}>
           <a href="#contact-m" className={activeSection === "contact" ? "active" : ""}>Contact</a>
           <a href="#work-m" className={activeSection === "work" ? "active" : ""} onClick={scrollToTop}>Work</a>
         </nav>
