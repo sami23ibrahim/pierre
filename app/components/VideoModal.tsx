@@ -56,6 +56,17 @@ export default function VideoModal({ videoId, onClose }: Props) {
       setMuted(v === 0);
     });
 
+    // iOS auto-mutes on autoplay without dropping volume to 0, so volumechange
+    // may report v=1 while the underlying <video>.muted flag is true. Sync the
+    // muted state directly once the player is ready.
+    player
+      .ready()
+      .then(() => player.getMuted())
+      .then((m: boolean) => {
+        if (m) setMuted(true);
+      })
+      .catch(() => {});
+
     return () => {
       player.destroy().catch(() => {});
       playerRef.current = null;
@@ -171,13 +182,24 @@ export default function VideoModal({ videoId, onClose }: Props) {
   const toggleMute = async () => {
     const p = playerRef.current;
     if (!p) return;
-    if (muted || volume === 0) await p.setVolume(1);
-    else await p.setVolume(0);
+    if (muted || volume === 0) {
+      // iOS Safari: setVolume alone doesn't clear the underlying <video>.muted
+      // flag that Vimeo sets during autoplay. setMuted is required.
+      await p.setMuted(false);
+      if (volume === 0) await p.setVolume(1);
+    } else {
+      await p.setMuted(true);
+    }
   };
 
   const onVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = Number(e.target.value);
-    playerRef.current?.setVolume(v);
+    const p = playerRef.current;
+    if (!p) return;
+    p.setVolume(v);
+    // Keep muted flag aligned with volume so iOS doesn't stay silent at v>0
+    // after an autoplay auto-mute.
+    p.setMuted(v === 0);
   };
 
   const requestFullscreen = async () => {
