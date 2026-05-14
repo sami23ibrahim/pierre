@@ -47,7 +47,7 @@ export default function Portfolio({ thumbnails }: Props) {
 
   useEffect(() => {
     const targets = document.querySelectorAll(
-      ".tile-media, .contact h2, .agencies-stack, .agencies"
+      ".tile-media, .tile-label, .contact h2, .agencies-stack, .agencies"
     );
     const observer = new IntersectionObserver(
       (entries) => {
@@ -206,21 +206,21 @@ export default function Portfolio({ thumbnails }: Props) {
               </div>
             </div>
 
-            {/* ROW 4: Lavazza / Rolling Stone */}
+            {/* ROW 4: Jeep / Rolling Stone */}
             <div className="row">
               <button
                 type="button"
                 className="tile-media is-video"
                 style={{ left: "2.17%", top: "5.69%", width: "56.82%", height: "63.75%" }}
-                onClick={open("648106703")}
-                aria-label="Play Lavazza — Alexa"
+                onClick={open("695205162")}
+                aria-label="Play Jeep — Rewild Yourself"
               >
-                <img src={thumb("648106703", "/images/LAVAZZA.png")} alt="Lavazza — Alexa" />
+                <img src={thumb("695205162", "/images/LAVAZZA.png")} alt="Jeep — Rewild Yourself" />
                 <PlayIcon />
               </button>
               <div className="tile-label" style={{ left: "2.17%", top: "70.83%", width: "56.82%" }}>
-                <span className="client">Lavazza</span>
-                <span className="ttl">Alexa</span>
+                <span className="client">Jeep</span>
+                <span className="ttl">Rewild Yourself</span>
               </div>
 
               <button
@@ -436,15 +436,15 @@ export default function Portfolio({ thumbnails }: Props) {
               type="button"
               className="tile-media is-video"
               style={{ aspectRatio: "1.655" }}
-              onClick={open("648106703")}
-              aria-label="Play Lavazza — Alexa"
+              onClick={open("695205162")}
+              aria-label="Play Jeep — Rewild Yourself"
             >
-              <img src={thumb("648106703", "/images/LAVAZZA.png")} alt="Lavazza — Alexa" />
+              <img src={thumb("695205162", "/images/LAVAZZA.png")} alt="Jeep — Rewild Yourself" />
               <PlayIcon />
             </button>
             <div className="tile-label">
-              <span className="client">Lavazza</span>
-              <span className="ttl">Alexa</span>
+              <span className="client">Jeep</span>
+              <span className="ttl">Rewild Yourself</span>
             </div>
           </div>
 

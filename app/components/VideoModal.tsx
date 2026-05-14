@@ -260,16 +260,6 @@ export default function VideoModal({ videoId, onClose }: Props) {
         };
         if (el.requestFullscreen) await el.requestFullscreen();
         else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-
-        // Best-effort orientation lock — Android honors it, iOS rejects (silently fine).
-        const orient = (screen as Screen & {
-          orientation?: { lock?: (o: string) => Promise<void> };
-        }).orientation;
-        try {
-          if (orient?.lock) await orient.lock("landscape");
-        } catch {
-          /* iOS will reject — that's expected */
-        }
         ping();
       } catch (err) {
         console.warn("Native fullscreen failed:", err);
@@ -299,11 +289,11 @@ export default function VideoModal({ videoId, onClose }: Props) {
   const src = `https://player.vimeo.com/video/${videoId}?${autoplayParam}controls=0&title=0&byline=0&portrait=0&dnt=1&playsinline=1`;
 
   return (
-    <div className="vm-backdrop" onClick={onClose} role="dialog" aria-modal="true">
+    <div className="vm-backdrop" role="dialog" aria-modal="true">
       <div
         ref={stageRef}
         className={`vm-stage ${playing ? "" : "is-paused"} ${active ? "is-active" : ""} ${cssFullscreen ? "is-fs" : ""}`}
-        onClick={(e) => { e.stopPropagation(); ping(); }}
+        onClick={ping}
         onMouseMove={ping}
         onMouseLeave={() => setActive(false)}
         onTouchEnd={ping}
@@ -318,11 +308,11 @@ export default function VideoModal({ videoId, onClose }: Props) {
           />
           <div
             className="vm-touch-layer"
-            onClick={ping}
+            onClick={togglePlay}
             onTouchEnd={ping}
             aria-hidden
           />
-          {isIOS && !playing && (
+          {!playing && (
             <button
               className="vm-play-overlay"
               onClick={togglePlay}
@@ -342,19 +332,6 @@ export default function VideoModal({ videoId, onClose }: Props) {
         </div>
 
         <div className="vm-controls">
-          <button className="vm-btn" onClick={togglePlay} aria-label={playing ? "Pause" : "Play"} type="button">
-            {playing ? (
-              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
-                <rect x="6" y="5" width="4" height="14" fill="currentColor" />
-                <rect x="14" y="5" width="4" height="14" fill="currentColor" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden>
-                <path d="M7 5v14l12-7L7 5z" fill="currentColor" />
-              </svg>
-            )}
-          </button>
-
           <div className="vm-vol">
             <button className="vm-btn" onClick={toggleMute} aria-label={muted ? "Unmute" : "Mute"} type="button">
               {muted || volume === 0 ? (
@@ -369,16 +346,18 @@ export default function VideoModal({ videoId, onClose }: Props) {
                 </svg>
               )}
             </button>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={muted ? 0 : volume}
-              onChange={onVolumeChange}
-              aria-label="Volume"
-              className="vm-range"
-            />
+            {!isTouch && (
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={muted ? 0 : volume}
+                onChange={onVolumeChange}
+                aria-label="Volume"
+                className="vm-range"
+              />
+            )}
           </div>
 
           <button

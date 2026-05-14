@@ -11,7 +11,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
+html, body { margin: 0; padding: 0; overflow-x: hidden; }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
@@ -20,7 +20,6 @@ body {
   color: var(--fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
 }
 a { color: inherit; text-decoration: none; }
 ::selection { background: var(--accent); color: var(--bg); }
@@ -478,6 +477,19 @@ a { color: inherit; text-decoration: none; }
     transform: translate(0, 0) !important;
   }
 
+  /* Tile labels (client + title) — fade + rise into view, same easing as the
+     images so each label follows its tile in. */
+  .tile-label {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity .9s ease, transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform, opacity;
+  }
+  .tile-label.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   /* Get in Touch — rise animation, triggered on scroll */
   .contact h2 .line { display: block; overflow: hidden; }
   .contact h2 .line span {
@@ -622,9 +634,8 @@ button.tile-media {
 .vm-close:hover { opacity: 1 !important; transform: scale(1.05); }
 .vm-stage:not(.is-active):not(.is-paused) { cursor: none; }
 
-/* iOS tap-to-play overlay — shown when the video isn't playing on Apple
-   devices. The tap on this button is the user gesture iOS needs to start
-   playback with sound. */
+/* Center play overlay — shown whenever the video is paused. On iOS the tap
+   on this button is also the user gesture that unlocks playback with sound. */
 .vm-play-overlay {
   position: absolute;
   inset: 0;
@@ -747,6 +758,9 @@ button.tile-media {
     padding-right: max(14px, env(safe-area-inset-right));
     padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
+  /* Mobile: mute button in the left corner, fullscreen in the right. */
+  .vm-vol { margin-left: 0; }
+  .vm-fs { margin-left: auto; }
   .vm-close {
     top: max(8px, env(safe-area-inset-top));
     right: max(8px, env(safe-area-inset-right));
@@ -760,24 +774,6 @@ button.tile-media {
   .vm-stage.is-fs .vm-frame {
     width: 100vw;
     height: 100vh;
-    aspect-ratio: auto;
-  }
-}
-
-/* iPhone in portrait: rotate the CSS-fullscreen wrapper 90° so the 16:9 video
-   fills the screen. Drops cleanly when the user physically rotates. */
-@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
-  .vm-stage.is-fs {
-    position: fixed;
-    width: 100vh;
-    height: 100vw;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(90deg);
-  }
-  .vm-stage.is-fs .vm-frame {
-    width: 100%;
-    height: 100%;
     aspect-ratio: auto;
   }
 }
@@ -831,25 +827,4 @@ button.tile-media {
 .vm-stage:-webkit-full-screen .vm-close {
   top: max(22px, env(safe-area-inset-top));
   right: max(22px, env(safe-area-inset-right));
-}
-
-/* iOS in portrait: Apple blocks screen.orientation.lock(), so when the user
-   enters fullscreen on an iPhone in portrait we rotate the wrapper 90° so the
-   16:9 video fills the screen. If the user physically rotates to landscape,
-   the orientation media query stops matching and the rotation drops cleanly. */
-@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
-  .vm-stage:fullscreen {
-    width: 100vh;
-    height: 100vw;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(90deg);
-  }
-  .vm-stage:-webkit-full-screen {
-    width: 100vh;
-    height: 100vw;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(90deg);
-  }
 }

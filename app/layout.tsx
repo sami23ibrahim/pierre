@@ -19,6 +19,13 @@ const interTight = Inter_Tight({
 
 export const metadata: Metadata = {
   title: "Pierre Mouarkech — Director of Photography",
+  // Stop iOS Safari from auto-linking phone numbers / emails with its own
+  // blue + underlined styling.
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
 };
 
 export const viewport: Viewport = {
