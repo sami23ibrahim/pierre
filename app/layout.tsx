@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Anton, Inter_Tight } from "next/font/google";
+import { Anton, Inter, Inter_Tight } from "next/font/google";
 import "./globals.css";
 
 // TODO: replace Anton with the licensed Druk-style font from the Canva original.
@@ -7,6 +7,13 @@ const anton = Anton({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-anton",
+  display: "swap",
+});
+
+const inter = Inter({
+  weight: ["400", "500", "600", "700", "800", "900"],
+  subsets: ["latin"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -36,7 +43,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${anton.variable} ${interTight.variable}`}>
+    <html lang="en" className={`${anton.variable} ${inter.variable} ${interTight.variable}`}>
       <body>{children}</body>
     </html>
   );

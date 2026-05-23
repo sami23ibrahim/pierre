@@ -6,6 +6,7 @@
   --fg-faint: rgba(237, 237, 237, 0.25);
   --rule: rgba(237, 237, 237, 0.08);
   --font-display: var(--font-anton), "Helvetica Neue Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-hero: "Neue Haas Grotesk Display Pro", "Helvetica Neue", Helvetica, var(--font-inter), Arial, sans-serif;
   --font-sans: var(--font-inter-tight), "Helvetica Neue", Helvetica, Arial, sans-serif;
   --pad-x: 16px;
 }
@@ -61,11 +62,11 @@ a { color: inherit; text-decoration: none; }
   width: fit-content;
 }
 .layout-desktop .hero h1 {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 10cqw;
+  font-family: var(--font-hero);
+  font-weight: 700;
+  font-size: 9cqw;
   line-height: 0.95;
-  letter-spacing: 0;
+  letter-spacing: -0.035em;
   margin: 0;
   text-transform: uppercase;
   color: var(--fg);
@@ -122,6 +123,9 @@ a { color: inherit; text-decoration: none; }
   width: 100%;
   aspect-ratio: 1337.5 / 720;
   container-type: inline-size;
+}
+.layout-desktop .row.is-full {
+  aspect-ratio: 1337.5 / 720;
 }
 .layout-desktop .tile-media {
   position: absolute;
@@ -214,7 +218,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: 700;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--fg);
   margin-bottom: 4px;
 }
 .layout-desktop .agency a {
@@ -222,14 +226,14 @@ a { color: inherit; text-decoration: none; }
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--fg);
+  color: var(--fg-dim);
   border-bottom: 1px solid transparent;
   transition: border-color .3s ease;
   width: fit-content;
 }
-.layout-desktop .agency a:hover { border-bottom-color: var(--fg); }
+.layout-desktop .agency a:hover { border-bottom-color: var(--fg-dim); }
 .layout-desktop .agency .phone {
-  color: var(--fg);
+  color: var(--fg-dim);
   font-size: 1.25cqw;
   letter-spacing: 0.04em;
   font-weight: 500;
@@ -297,11 +301,11 @@ a { color: inherit; text-decoration: none; }
   text-align: center;
 }
 .layout-mobile .hero h1 {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 17vw;
+  font-family: var(--font-hero);
+  font-weight: 700;
+  font-size: 15vw;
   line-height: 0.95;
-  letter-spacing: 0;
+  letter-spacing: -0.035em;
   margin: 0;
   text-transform: uppercase;
   color: var(--fg);
@@ -406,7 +410,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--fg);
   margin-bottom: 3px;
 }
 .layout-mobile .agency a {
@@ -414,11 +418,11 @@ a { color: inherit; text-decoration: none; }
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--fg);
+  color: var(--fg-dim);
   width: fit-content;
 }
 .layout-mobile .agency .phone {
-  color: var(--fg);
+  color: var(--fg-dim);
   font-size: 12px;
   letter-spacing: 0.04em;
   font-weight: 500;
@@ -464,6 +468,8 @@ a { color: inherit; text-decoration: none; }
   }
   .layout-desktop .row > .tile-media:nth-child(1) { transform: translateX(-80px); }
   .layout-desktop .row > .tile-media:nth-child(3) { transform: translateX(80px); }
+  /* Full-width featured row: single tile rises from below instead of sliding sideways. */
+  .layout-desktop .row.is-full > .tile-media:nth-child(1) { transform: translateY(60px); }
 
   .layout-mobile .tile-media {
     opacity: 0;

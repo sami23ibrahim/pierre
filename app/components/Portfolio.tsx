@@ -108,7 +108,25 @@ export default function Portfolio({ thumbnails }: Props) {
           </header>
 
           <section id="work">
-            {/* ROW 1: Heineken / McDonald's */}
+            {/* ROW 1 (featured, full-width): Toyota — If */}
+            <div className="row is-full">
+              <button
+                type="button"
+                className="tile-media is-video"
+                style={{ left: "1.65%", top: "2.22%", width: "96.7%", height: "88%" }}
+                onClick={open("291694491")}
+                aria-label="Play Toyota — If"
+              >
+                <img src={thumb("291694491", "/images/Heinken.png")} alt="Toyota — If" />
+                <PlayIcon />
+              </button>
+              <div className="tile-label" style={{ left: "1.65%", top: "92%", width: "96.7%" }}>
+                <span className="client">Toyota</span>
+                <span className="ttl">If</span>
+              </div>
+            </div>
+
+            {/* ROW 2: Heineken / McDonald's */}
             <div className="row">
               <button
                 type="button"
@@ -141,7 +159,7 @@ export default function Portfolio({ thumbnails }: Props) {
               </div>
             </div>
 
-            {/* ROW 2: Denner / Du */}
+            {/* ROW 3: Denner / Du */}
             <div className="row">
               <button
                 type="button"
@@ -174,7 +192,25 @@ export default function Portfolio({ thumbnails }: Props) {
               </div>
             </div>
 
-            {/* ROW 3: L'Occitane / Molto Fino */}
+            {/* ROW 4 (featured, full-width): Du — Too Distressing */}
+            <div className="row is-full">
+              <button
+                type="button"
+                className="tile-media is-video"
+                style={{ left: "1.65%", top: "2.22%", width: "96.7%", height: "88%" }}
+                onClick={open("121774920")}
+                aria-label="Play Du — Too Distressing"
+              >
+                <img src={thumb("121774920", "/images/DU.png")} alt="Du — Too Distressing" />
+                <PlayIcon />
+              </button>
+              <div className="tile-label" style={{ left: "1.65%", top: "92%", width: "96.7%" }}>
+                <span className="client">Du</span>
+                <span className="ttl">Too Distressing</span>
+              </div>
+            </div>
+
+            {/* ROW 5: L'Occitane / Molto Fino */}
             <div className="row">
               <button
                 type="button"
@@ -206,7 +242,7 @@ export default function Portfolio({ thumbnails }: Props) {
               </div>
             </div>
 
-            {/* ROW 4: Jeep / Rolling Stone */}
+            {/* ROW 6: Jeep / Rolling Stone */}
             <div className="row">
               <button
                 type="button"
@@ -239,7 +275,7 @@ export default function Portfolio({ thumbnails }: Props) {
               </div>
             </div>
 
-            {/* ROW 5: Diesel / Hardees */}
+            {/* ROW 7: Diesel / Hardees */}
             <div className="row">
               <button
                 type="button"
