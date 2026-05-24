@@ -370,6 +370,23 @@ export default function Portfolio({ thumbnails }: Props) {
             <button
               type="button"
               className="tile-media is-video"
+              style={{ aspectRatio: "1.858" }}
+              onClick={open("291694491")}
+              aria-label="Play Toyota — If"
+            >
+              <img src={thumb("291694491", "/images/Heinken.png")} alt="Toyota — If" />
+              <PlayIcon />
+            </button>
+            <div className="tile-label">
+              <span className="client">Toyota</span>
+              <span className="ttl">If</span>
+            </div>
+          </div>
+
+          <div className="tile">
+            <button
+              type="button"
+              className="tile-media is-video"
               style={{ aspectRatio: "2.014" }}
               onClick={open("803985634")}
               aria-label="Play Heineken — The Cleaners"
@@ -431,6 +448,23 @@ export default function Portfolio({ thumbnails }: Props) {
             <div className="tile-label">
               <span className="client">Du</span>
               <span className="ttl">The Men Sitting Next To You</span>
+            </div>
+          </div>
+
+          <div className="tile">
+            <button
+              type="button"
+              className="tile-media is-video"
+              style={{ aspectRatio: "1.858" }}
+              onClick={open("121774920")}
+              aria-label="Play Du — Too Distressing"
+            >
+              <img src={thumb("121774920", "/images/DU.png")} alt="Du — Too Distressing" />
+              <PlayIcon />
+            </button>
+            <div className="tile-label">
+              <span className="client">Du</span>
+              <span className="ttl">Too Distressing</span>
             </div>
           </div>
 
