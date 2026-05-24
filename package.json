@@ -6,10 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run"
   },
   "dependencies": {
     "@types/vimeo__player": "^2.18.3",
+    "@vercel/blob": "^2.4.0",
     "@vimeo/player": "^2.30.4",
     "next": "^15.1.0",
     "react": "^19.0.0",
@@ -19,6 +21,7 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.7"
   }
 }
