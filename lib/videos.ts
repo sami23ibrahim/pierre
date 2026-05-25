@@ -43,12 +43,13 @@ export const SEED_VIDEOS: Video[] = [
   { id: "seed-12", vimeoId: "223460819",  client: "Fischer",       title: "The Naked Truth" },
 ];
 
-/** Extract a numeric Vimeo ID from a bare ID or a Vimeo URL. Null if invalid. */
+/** Extract a numeric Vimeo ID from a bare ID, any Vimeo URL (public, player,
+ * manage), or a full embed iframe. Null if no Vimeo ID can be found. */
 export function parseVimeoId(input: string): string | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
   if (/^\d+$/.test(trimmed)) return trimmed;
-  const match = trimmed.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  const match = trimmed.match(/vimeo\.com\/(?:[^/\s"<>?]+\/)*?(\d+)/i);
   return match ? match[1] : null;
 }
 

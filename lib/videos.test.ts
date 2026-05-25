@@ -14,6 +14,14 @@ describe("parseVimeoId", () => {
   it("accepts a player.vimeo.com URL", () => {
     expect(parseVimeoId("https://player.vimeo.com/video/803985634")).toBe("803985634");
   });
+  it("accepts a vimeo.com/manage/videos URL", () => {
+    expect(parseVimeoId("https://vimeo.com/manage/videos/1131470962")).toBe("1131470962");
+  });
+  it("extracts the ID from a full Vimeo embed iframe", () => {
+    const embed =
+      '<iframe src="https://player.vimeo.com/video/898044833?title=0&amp;byline=0&amp;portrait=0" width="1920" height="1080" frameborder="0"></iframe>';
+    expect(parseVimeoId(embed)).toBe("898044833");
+  });
   it("trims surrounding whitespace", () => {
     expect(parseVimeoId("  803985634  ")).toBe("803985634");
   });
