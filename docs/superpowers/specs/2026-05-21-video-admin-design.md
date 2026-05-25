@@ -11,37 +11,45 @@ after this work the video list is data, and the public site renders from it.
 
 ## Background — current state
 
-- `app/components/Portfolio.tsx` — all 10 videos are hand-written JSX, each tile
+- `app/components/Portfolio.tsx` — all 12 videos are hand-written JSX, each tile
   written **twice**: once for the desktop collage (absolute `left/top/width/height`
   percentages inside a `.row`) and once for the mobile list (a per-tile
-  `aspectRatio`).
-- `app/page.tsx` — a 10-item `VIDEO_IDS` array, used only to pre-fetch Vimeo
+  `aspectRatio`). Two of the rows are **featured full-width** (`.row.is-full`)
+  with a single tile; the rest are two-tile paired rows.
+- `app/page.tsx` — a 12-item `VIDEO_IDS` array, used only to pre-fetch Vimeo
   thumbnails via the oembed API.
 - The site is effectively static. Thumbnails come free from Vimeo given a video
   ID; no image uploads are involved.
 - Deployed on Vercel (Next.js 15, App Router, React 19, TypeScript).
 
-## Core concept — the 10-slot blueprint
+## Core concept — the 12-slot blueprint
 
-The 10 current tile shapes become a fixed **layout blueprint of 10 slots**. This
+The 12 current tile shapes become a fixed **layout blueprint of 12 slots**. This
 is *design*, not content (Pierre's hand-tuned arrangement), so it stays in code.
 
-- **Video N renders in slot `(N − 1) mod 10`.** The collage repeats every 10
-  videos: video 11 reuses slot 1's shape, video 12 reuses slot 2's, and so on.
+- **Video N renders in slot `(N − 1) mod 12`.** The collage repeats every 12
+  videos: video 13 reuses slot 1's shape, video 14 reuses slot 2's, and so on.
+- Each slot has a **kind**:
+  - `featured` — a full-width row containing only this video (`.row.is-full`).
+    Slots 1 and 6 are featured.
+  - `left` / `right` — half of a two-tile paired row. A `left` slot is always
+    immediately followed by a `right` slot in the blueprint, so they always
+    share a row.
 - Each slot carries **both** a desktop shape and a mobile aspect ratio, so the
-  mobile list is also a 10-card blueprint (cards stay individually sized; card 11
-  reuses card 1's aspect ratio).
+  mobile list is also a 12-card blueprint (cards stay individually sized; card
+  13 reuses card 1's aspect ratio). On mobile, featured cards render as a
+  single widescreen tile, same as a regular tile but at a 16:9 aspect.
 
 ### Slot data
 
-`lib/layout.ts` exports `LAYOUT`, an array of 10 slots extracted **verbatim**
+`lib/layout.ts` exports `LAYOUT`, an array of 12 slots extracted **verbatim**
 from today's `Portfolio.tsx` so the site stays pixel-identical.
 
 Each slot:
 
 ```ts
 type Slot = {
-  side: "left" | "right";
+  kind: "featured" | "left" | "right";
   desktop: {
     media: { left: string; top: string; width: string; height: string };
     label: { left: string; top: string; width: string };
@@ -50,39 +58,48 @@ type Slot = {
 };
 ```
 
-Desktop values (percentages, as in current JSX). Rows have a uniform
-`aspect-ratio: 1337.5 / 720`, so a 6th row is just row 1's box repeated.
+Desktop values (percentages, as in current JSX). Paired rows have
+`aspect-ratio: 1337.5 / 720`. Featured rows use the same row aspect ratio
+(via `.row.is-full`) so the visual rhythm is preserved.
 
-| Slot | Side  | media L/T/W/H            | label L/T/W          | mobile AR |
-|------|-------|--------------------------|----------------------|-----------|
-| 1    | left  | 1.65 / 30.97 / 62.35 / 57.50 | 1.87 / 89.86 / 62.35 | 2.014 |
-| 2    | right | 66.39 / 2.22 / 33.50 / 89.03 | 66.39 / 92.64 / 33.50 | 0.699 |
-| 3    | left  | 1.65 / 2.22 / 39.63 / 58.89  | 1.65 / 62.64 / 39.63 | 1.250 |
-| 4    | right | 43.14 / 7.36 / 56.82 / 84.44 | 43.14 / 92.22 / 56.82 | 1.250 |
-| 5    | left  | 1.65 / 2.22 / 33.36 / 89.03  | 1.65 / 92.64 / 33.36 | 0.695 |
-| 6    | right | 36.49 / 28.06 / 63.55 / 63.33 | 36.49 / 92.64 / 63.55 | 1.865 |
-| 7    | left  | 2.17 / 5.69 / 56.82 / 63.75  | 2.17 / 70.83 / 56.82 | 1.655 |
-| 8    | right | 61.23 / 39.86 / 38.66 / 47.22 | 61.23 / 88.47 / 38.66 | 1.519 |
-| 9    | left  | 2.17 / 17.08 / 63.55 / 63.33  | 2.17 / 81.81 / 63.55 | 1.865 |
-| 10   | right | 67.81 / 2.22 / 32.09 / 89.03  | 67.81 / 92.64 / 32.09 | 0.670 |
+| Slot | Kind     | media L/T/W/H                 | label L/T/W           | mobile AR |
+|------|----------|-------------------------------|-----------------------|-----------|
+| 1    | featured | 1.65 / 2.22 / 96.7 / 88       | 1.65 / 92 / 96.7      | 1.778 |
+| 2    | left     | 1.65 / 30.97 / 62.35 / 57.50  | 1.87 / 89.86 / 62.35  | 2.014 |
+| 3    | right    | 66.39 / 2.22 / 33.50 / 89.03  | 66.39 / 92.64 / 33.50 | 0.699 |
+| 4    | left     | 1.65 / 2.22 / 39.63 / 58.89   | 1.65 / 62.64 / 39.63  | 1.250 |
+| 5    | right    | 43.14 / 7.36 / 56.82 / 84.44  | 43.14 / 92.22 / 56.82 | 1.250 |
+| 6    | featured | 1.65 / 2.22 / 96.7 / 88       | 1.65 / 92 / 96.7      | 1.778 |
+| 7    | left     | 1.65 / 2.22 / 33.36 / 89.03   | 1.65 / 92.64 / 33.36  | 0.695 |
+| 8    | right    | 36.49 / 28.06 / 63.55 / 63.33 | 36.49 / 92.64 / 63.55 | 1.865 |
+| 9    | left     | 2.17 / 5.69 / 56.82 / 63.75   | 2.17 / 70.83 / 56.82  | 1.655 |
+| 10   | right    | 61.23 / 39.86 / 38.66 / 47.22 | 61.23 / 88.47 / 38.66 | 1.519 |
+| 11   | left     | 2.17 / 17.08 / 63.55 / 63.33  | 2.17 / 81.81 / 63.55  | 1.865 |
+| 12   | right    | 67.81 / 2.22 / 32.09 / 89.03  | 67.81 / 92.64 / 32.09 | 0.670 |
 
-Row layout: row R holds slots `2R` and `2R+1` (0-based pairs) — row 1 = slots
-1+2, row 2 = slots 3+4, … row 5 = slots 9+10, row 6 = slots 1+2 again, etc.
+Row layout: a slot of kind `featured` is its own full-width row. Consecutive
+`left`+`right` slots share a paired row. So in the seed blueprint:
+row 1 = slot 1 (featured), row 2 = slots 2+3, row 3 = slots 4+5,
+row 4 = slot 6 (featured), row 5 = slots 7+8, row 6 = slots 9+10,
+row 7 = slots 11+12. Wrapping past 12 starts again at slot 1 (featured).
 
 ## Variable video count
 
-The blueprint has 10 slots, but the live list may hold any number — 6, 7, 13…
+The blueprint has 12 slots, but the live list may hold any number — 6, 7, 15…
 Slots are filled **in order, only as many as there are videos**.
 
-- **Mobile** — a single vertical column; any count works directly.
-- **Desktop** — rows are built two tiles at a time. With an **even** count every
-  row is a complete pair. With an **odd** count the final row has only its
-  **left** tile (the last video is always at an odd 1-based number → a `left`
-  slot); it renders in that slot's designed shape and the right half of the row
-  is empty space. **Decision: leave it left, empty right** — keep the tile's
-  designed proportions, no special centering.
-- Fewer than 10 videos → only the needed rows render. More than 10 → rows keep
-  cycling through the blueprint.
+- **Mobile** — a single vertical column; any count works directly. Featured-kind
+  slots render at a 16:9 aspect; paired-kind slots use their hand-tuned aspect.
+- **Desktop** — rows are built by walking the slot sequence:
+  - A `featured` slot is always its own full-width row.
+  - A `left` slot pairs with the immediately following `right` slot to form a
+    two-tile row.
+  - If the list ends on a `left` slot (the next slot in the blueprint would be
+    `right`), that final row holds the single left tile in its designed shape
+    and the right half of the row is empty space. **Decision: leave it left,
+    empty right** — keep the tile's designed proportions, no special centering.
+- Fewer than 12 videos → only the needed rows render. More than 12 → rows keep
+  cycling through the blueprint, so video 13 reuses slot 1 (a new featured row).
 
 ## No-gaps rule
 
@@ -102,8 +119,8 @@ The video list lives in a single Vercel Blob file, `videos.json`:
 
 ```json
 [
-  { "id": "v1", "vimeoId": "803985634",  "client": "Heineken",   "title": "The Cleaners" },
-  { "id": "v2", "vimeoId": "1131470962", "client": "Diriyah FC", "title": "Underdogs" }
+  { "id": "v1", "vimeoId": "291694491",  "client": "Toyota",     "title": "If" },
+  { "id": "v2", "vimeoId": "803985634",  "client": "Heineken",   "title": "The Cleaners" }
 ]
 ```
 
@@ -125,10 +142,12 @@ The video list lives in a single Vercel Blob file, `videos.json`:
   thumbnail via the existing oembed call (24h `revalidate`) → pass the combined
   list to `Portfolio`.
 - `app/components/Portfolio.tsx`: the two hand-written blocks become two
-  `.map()`s — desktop chunks the list into rows of 2, mobile renders a flat
-  list — each video `i` paired with `LAYOUT[i mod 10]`. Existing behavior
-  (modal, scroll-spy nav, intersection-observer animations, mobile nav
-  hide/reveal) is unchanged.
+  `.map()`s — desktop walks the list through a `layoutRows()` helper that
+  groups consecutive `left`+`right` slots into paired rows and gives each
+  `featured` slot its own full-width row; mobile renders a flat list — each
+  video `i` paired with `LAYOUT[i mod 12]`. Existing behavior (modal,
+  scroll-spy nav, intersection-observer animations, mobile nav hide/reveal)
+  is unchanged.
 - `alt` text and play-button `aria-label` are derived as
   `client` + `" — "` + `title` (or just `client` when there is no title).
 - Per-video local fallback images (`/images/Heinken.png`, etc.) are dropped —
@@ -161,12 +180,12 @@ Each phase leaves the site fully working and deployable.
 
 1. **Phase 1 — make the site data-driven.** Extract `LAYOUT` to `lib/layout.ts`.
    Add `lib/videos.ts` with the `Video` type and a hardcoded `SEED_VIDEOS`
-   array (today's 10). Refactor `Portfolio.tsx` and `page.tsx` to render from
+   array (today's 12). Refactor `Portfolio.tsx` and `page.tsx` to render from
    that list. Verify the site is pixel-identical to today on desktop and
    mobile.
 2. **Phase 2 — move the list into Vercel Blob.** Add `@vercel/blob`, create the
    Blob store and `BLOB_READ_WRITE_TOKEN` env var. Implement `getVideos()` /
-   `saveVideos()`. Seed `videos.json` with the current 10. `page.tsx` reads
+   `saveVideos()`. Seed `videos.json` with the current 12. `page.tsx` reads
    from Blob.
 3. **Phase 3 — admin.** Add `ADMIN_PASSWORD` auth + `middleware.ts`, the
    `/admin` UI, and the save server action with validation and revalidation.

@@ -4,7 +4,7 @@
 
 **Goal:** Make the portfolio site render videos from data, and add a password-protected admin dashboard where the owner can add / edit / delete / reorder videos.
 
-**Architecture:** The 10 hand-tuned tile shapes become a fixed 10-slot layout *blueprint* in code (`lib/layout.ts`); video N renders in slot `(N-1) mod 10`, so the collage repeats every 10. Video *content* (Vimeo ID, client, title) lives in a single ordered JSON array in Vercel Blob. The public site reads that array; an admin dashboard writes it and triggers a cache revalidation. No deploys on content change.
+**Architecture:** The 12 hand-tuned tile shapes become a fixed 12-slot layout *blueprint* in code (`lib/layout.ts`). Each slot has a `kind`: `featured` (a full-width row containing one tile — slots 1 and 6) or `left` / `right` (one half of a two-tile paired row). Video N renders in slot `(N-1) mod 12`, so the collage repeats every 12. Video *content* (Vimeo ID, client, title) lives in a single ordered JSON array in Vercel Blob. The public site reads that array; an admin dashboard writes it and triggers a cache revalidation. No deploys on content change.
 
 **Tech Stack:** Next.js 15 (App Router), React 19, TypeScript, Vercel Blob (`@vercel/blob`), Vitest for unit tests, HMAC cookie auth via Web Crypto.
 
@@ -114,7 +114,7 @@ git commit -m "chore: add @vercel/blob and vitest"
 
 **Wave A — parallel with T2, T3. Depends on: T0.**
 
-The 10-slot layout blueprint plus two pure helpers. Values are transcribed verbatim from the current `app/components/Portfolio.tsx` so the rendered site stays pixel-identical.
+The 12-slot layout blueprint (two `featured` full-width slots + five `left`+`right` paired pairs) plus two pure helpers. Values are transcribed verbatim from the current `app/components/Portfolio.tsx` so the rendered site stays pixel-identical.
 
 **Files:**
 - Create: `lib/layout.ts`
@@ -126,45 +126,78 @@ Create `lib/layout.test.ts`:
 
 ```ts
 import { describe, it, expect } from "vitest";
-import { LAYOUT, slotForIndex, chunkIntoRows } from "./layout";
+import { LAYOUT, slotForIndex, layoutRows } from "./layout";
 
 describe("LAYOUT", () => {
-  it("has 10 slots", () => {
-    expect(LAYOUT).toHaveLength(10);
+  it("has 12 slots", () => {
+    expect(LAYOUT).toHaveLength(12);
   });
 
-  it("alternates left / right sides", () => {
+  it("marks slots 0 and 5 as featured (full-width)", () => {
+    expect(LAYOUT[0].kind).toBe("featured");
+    expect(LAYOUT[5].kind).toBe("featured");
+  });
+
+  it("every left slot is followed by a right slot (so they always pair)", () => {
     LAYOUT.forEach((slot, i) => {
-      expect(slot.side).toBe(i % 2 === 0 ? "left" : "right");
+      if (slot.kind === "left") {
+        expect(LAYOUT[i + 1]?.kind).toBe("right");
+      }
     });
   });
 });
 
 describe("slotForIndex", () => {
-  it("maps indexes 0-9 to slots 0-9", () => {
+  it("maps indexes 0-11 to slots 0-11", () => {
     expect(slotForIndex(7)).toBe(LAYOUT[7]);
   });
 
-  it("wraps every 10 — video 11 (index 10) reuses slot 0", () => {
-    expect(slotForIndex(10)).toBe(LAYOUT[0]);
+  it("wraps every 12 — video 13 (index 12) reuses slot 0 (a featured row)", () => {
+    expect(slotForIndex(12)).toBe(LAYOUT[0]);
+    expect(slotForIndex(12).kind).toBe("featured");
   });
 
-  it("wraps — video 13 (index 12) reuses slot 2", () => {
-    expect(slotForIndex(12)).toBe(LAYOUT[2]);
+  it("wraps — video 15 (index 14) reuses slot 2", () => {
+    expect(slotForIndex(14)).toBe(LAYOUT[2]);
   });
 });
 
-describe("chunkIntoRows", () => {
-  it("pairs an even-length list", () => {
-    expect(chunkIntoRows([1, 2, 3, 4])).toEqual([[1, 2], [3, 4]]);
+describe("layoutRows", () => {
+  // Each item carries its 0-based slot index so the test can assert the row
+  // structure independent of any specific video data.
+  const items = (indexes: number[]) => indexes.map((i) => ({ i }));
+
+  it("puts a featured slot in its own row", () => {
+    // index 0 is featured.
+    expect(layoutRows(items([0]))).toEqual([
+      { kind: "featured", items: [{ i: 0 }] },
+    ]);
   });
 
-  it("leaves a lone item in the final row for an odd-length list", () => {
-    expect(chunkIntoRows([1, 2, 3])).toEqual([[1, 2], [3]]);
+  it("pairs consecutive left + right slots into one row", () => {
+    // indexes 1, 2 are left + right.
+    expect(layoutRows(items([1, 2]))).toEqual([
+      { kind: "paired", items: [{ i: 1 }, { i: 2 }] },
+    ]);
+  });
+
+  it("mixes featured and paired rows in the right order for the seed list", () => {
+    const result = layoutRows(items([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]));
+    expect(result.map((r) => r.kind)).toEqual([
+      "featured", "paired", "paired", "featured", "paired", "paired", "paired",
+    ]);
+  });
+
+  it("leaves a lone item in the final paired row when the list ends on a left slot", () => {
+    // indexes 1, 2, 3: left + right pair, then a lone left.
+    expect(layoutRows(items([1, 2, 3]))).toEqual([
+      { kind: "paired", items: [{ i: 1 }, { i: 2 }] },
+      { kind: "paired", items: [{ i: 3 }] },
+    ]);
   });
 
   it("returns no rows for an empty list", () => {
-    expect(chunkIntoRows([])).toEqual([]);
+    expect(layoutRows([])).toEqual([]);
   });
 });
 ```
@@ -179,8 +212,10 @@ Expected: FAIL — cannot resolve `./layout` (file does not exist yet).
 Create `lib/layout.ts`:
 
 ```ts
+export type SlotKind = "featured" | "left" | "right";
+
 export type Slot = {
-  side: "left" | "right";
+  kind: SlotKind;
   desktop: {
     media: { left: string; top: string; width: string; height: string };
     label: { left: string; top: string; width: string };
@@ -188,35 +223,62 @@ export type Slot = {
   mobile: { aspectRatio: string };
 };
 
+/** A row produced by layoutRows: a featured slot alone, or a left+right pair
+ * (which degrades to a lone left when the list ends mid-pair). */
+export type LayoutRow<T> =
+  | { kind: "featured"; items: [T] }
+  | { kind: "paired"; items: [T] | [T, T] };
+
 /**
- * The fixed 10-slot collage blueprint, transcribed verbatim from the original
- * hand-tuned tiles. Video N renders in slot (N-1) mod 10, so the layout
- * repeats every 10 videos. This is design, not content — it stays in code.
+ * The fixed 12-slot collage blueprint, transcribed verbatim from the original
+ * hand-tuned tiles plus the two featured full-width rows (Toyota at slot 0,
+ * Du - Too Distressing at slot 5). Video N renders in slot (N-1) mod 12, so
+ * the layout repeats every 12 videos. This is design, not content — it stays
+ * in code.
  */
 export const LAYOUT: Slot[] = [
-  { side: "left",  desktop: { media: { left: "1.65%",  top: "30.97%", width: "62.35%", height: "57.50%" }, label: { left: "1.87%",  top: "89.86%", width: "62.35%" } }, mobile: { aspectRatio: "2.014" } },
-  { side: "right", desktop: { media: { left: "66.39%", top: "2.22%",  width: "33.50%", height: "89.03%" }, label: { left: "66.39%", top: "92.64%", width: "33.50%" } }, mobile: { aspectRatio: "0.699" } },
-  { side: "left",  desktop: { media: { left: "1.65%",  top: "2.22%",  width: "39.63%", height: "58.89%" }, label: { left: "1.65%",  top: "62.64%", width: "39.63%" } }, mobile: { aspectRatio: "1.250" } },
-  { side: "right", desktop: { media: { left: "43.14%", top: "7.36%",  width: "56.82%", height: "84.44%" }, label: { left: "43.14%", top: "92.22%", width: "56.82%" } }, mobile: { aspectRatio: "1.250" } },
-  { side: "left",  desktop: { media: { left: "1.65%",  top: "2.22%",  width: "33.36%", height: "89.03%" }, label: { left: "1.65%",  top: "92.64%", width: "33.36%" } }, mobile: { aspectRatio: "0.695" } },
-  { side: "right", desktop: { media: { left: "36.49%", top: "28.06%", width: "63.55%", height: "63.33%" }, label: { left: "36.49%", top: "92.64%", width: "63.55%" } }, mobile: { aspectRatio: "1.865" } },
-  { side: "left",  desktop: { media: { left: "2.17%",  top: "5.69%",  width: "56.82%", height: "63.75%" }, label: { left: "2.17%",  top: "70.83%", width: "56.82%" } }, mobile: { aspectRatio: "1.655" } },
-  { side: "right", desktop: { media: { left: "61.23%", top: "39.86%", width: "38.66%", height: "47.22%" }, label: { left: "61.23%", top: "88.47%", width: "38.66%" } }, mobile: { aspectRatio: "1.519" } },
-  { side: "left",  desktop: { media: { left: "2.17%",  top: "17.08%", width: "63.55%", height: "63.33%" }, label: { left: "2.17%",  top: "81.81%", width: "63.55%" } }, mobile: { aspectRatio: "1.865" } },
-  { side: "right", desktop: { media: { left: "67.81%", top: "2.22%",  width: "32.09%", height: "89.03%" }, label: { left: "67.81%", top: "92.64%", width: "32.09%" } }, mobile: { aspectRatio: "0.670" } },
+  { kind: "featured", desktop: { media: { left: "1.65%",  top: "2.22%",  width: "96.7%",  height: "88%"    }, label: { left: "1.65%",  top: "92%",    width: "96.7%"  } }, mobile: { aspectRatio: "1.778" } },
+  { kind: "left",     desktop: { media: { left: "1.65%",  top: "30.97%", width: "62.35%", height: "57.50%" }, label: { left: "1.87%",  top: "89.86%", width: "62.35%" } }, mobile: { aspectRatio: "2.014" } },
+  { kind: "right",    desktop: { media: { left: "66.39%", top: "2.22%",  width: "33.50%", height: "89.03%" }, label: { left: "66.39%", top: "92.64%", width: "33.50%" } }, mobile: { aspectRatio: "0.699" } },
+  { kind: "left",     desktop: { media: { left: "1.65%",  top: "2.22%",  width: "39.63%", height: "58.89%" }, label: { left: "1.65%",  top: "62.64%", width: "39.63%" } }, mobile: { aspectRatio: "1.250" } },
+  { kind: "right",    desktop: { media: { left: "43.14%", top: "7.36%",  width: "56.82%", height: "84.44%" }, label: { left: "43.14%", top: "92.22%", width: "56.82%" } }, mobile: { aspectRatio: "1.250" } },
+  { kind: "featured", desktop: { media: { left: "1.65%",  top: "2.22%",  width: "96.7%",  height: "88%"    }, label: { left: "1.65%",  top: "92%",    width: "96.7%"  } }, mobile: { aspectRatio: "1.778" } },
+  { kind: "left",     desktop: { media: { left: "1.65%",  top: "2.22%",  width: "33.36%", height: "89.03%" }, label: { left: "1.65%",  top: "92.64%", width: "33.36%" } }, mobile: { aspectRatio: "0.695" } },
+  { kind: "right",    desktop: { media: { left: "36.49%", top: "28.06%", width: "63.55%", height: "63.33%" }, label: { left: "36.49%", top: "92.64%", width: "63.55%" } }, mobile: { aspectRatio: "1.865" } },
+  { kind: "left",     desktop: { media: { left: "2.17%",  top: "5.69%",  width: "56.82%", height: "63.75%" }, label: { left: "2.17%",  top: "70.83%", width: "56.82%" } }, mobile: { aspectRatio: "1.655" } },
+  { kind: "right",    desktop: { media: { left: "61.23%", top: "39.86%", width: "38.66%", height: "47.22%" }, label: { left: "61.23%", top: "88.47%", width: "38.66%" } }, mobile: { aspectRatio: "1.519" } },
+  { kind: "left",     desktop: { media: { left: "2.17%",  top: "17.08%", width: "63.55%", height: "63.33%" }, label: { left: "2.17%",  top: "81.81%", width: "63.55%" } }, mobile: { aspectRatio: "1.865" } },
+  { kind: "right",    desktop: { media: { left: "67.81%", top: "2.22%",  width: "32.09%", height: "89.03%" }, label: { left: "67.81%", top: "92.64%", width: "32.09%" } }, mobile: { aspectRatio: "0.670" } },
 ];
 
-/** The slot a video at the given 0-based index renders in. Wraps every 10. */
+/** The slot a video at the given 0-based index renders in. Wraps every 12. */
 export function slotForIndex(index: number): Slot {
   const len = LAYOUT.length;
   return LAYOUT[((index % len) + len) % len];
 }
 
-/** Split a list into rows of two (the desktop collage is two tiles per row). */
-export function chunkIntoRows<T>(items: T[]): T[][] {
-  const rows: T[][] = [];
-  for (let i = 0; i < items.length; i += 2) {
-    rows.push(items.slice(i, i + 2));
+/**
+ * Walk a list of videos through the layout blueprint and group them into rows.
+ * A featured slot becomes its own row; consecutive left+right slots share a
+ * paired row. A list that ends on a left slot produces a final paired row
+ * with only its left tile (the right half stays empty space).
+ */
+export function layoutRows<T>(items: T[]): LayoutRow<T>[] {
+  const rows: LayoutRow<T>[] = [];
+  let i = 0;
+  while (i < items.length) {
+    const slot = slotForIndex(i);
+    if (slot.kind === "featured") {
+      rows.push({ kind: "featured", items: [items[i]] });
+      i += 1;
+    } else {
+      // slot.kind === "left" by construction; pair with the next slot if there
+      // is one (which is always "right" per the blueprint invariant).
+      const pair: [T] | [T, T] =
+        i + 1 < items.length ? [items[i], items[i + 1]] : [items[i]];
+      rows.push({ kind: "paired", items: pair });
+      i += pair.length;
+    }
   }
   return rows;
 }
@@ -225,13 +287,13 @@ export function chunkIntoRows<T>(items: T[]): T[][] {
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `npx vitest run lib/layout.test.ts`
-Expected: PASS — 8 tests passed.
+Expected: PASS — 11 tests passed.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add lib/layout.ts lib/layout.test.ts
-git commit -m "feat: add 10-slot layout blueprint"
+git commit -m "feat: add 12-slot layout blueprint"
 ```
 
 ---
@@ -348,18 +410,22 @@ export type PrepareResult =
 
 const BLOB_KEY = "videos.json";
 
-/** The current 10 videos — the fallback when Blob has no data yet. */
+/** The current 12 videos — the fallback when Blob has no data yet. Order
+ * matches the on-site order: featured Toyota at #1, featured Du - Too
+ * Distressing at #6. */
 export const SEED_VIDEOS: Video[] = [
-  { id: "seed-1",  vimeoId: "803985634",  client: "Heineken",      title: "The Cleaners" },
-  { id: "seed-2",  vimeoId: "1131470962", client: "Diriyah FC",    title: "Underdogs" },
-  { id: "seed-3",  vimeoId: "1009764873", client: "Denner",        title: "The Good Life (DC)" },
-  { id: "seed-4",  vimeoId: "216957056",  client: "Du",            title: "The Men Sitting Next To You" },
-  { id: "seed-5",  vimeoId: "898044833",  client: "L'Occitane",    title: "" },
-  { id: "seed-6",  vimeoId: "682546048",  client: "Molto Fino",    title: "Feeds A Village" },
-  { id: "seed-7",  vimeoId: "695205162",  client: "Jeep",          title: "Rewild Yourself" },
-  { id: "seed-8",  vimeoId: "573367624",  client: "Rolling Stone", title: "Rockin' Mamas" },
-  { id: "seed-9",  vimeoId: "316674560",  client: "Diesel",        title: "Be A Follower" },
-  { id: "seed-10", vimeoId: "223460819",  client: "Fischer",       title: "The Naked Truth" },
+  { id: "seed-1",  vimeoId: "291694491",  client: "Toyota",        title: "If" },
+  { id: "seed-2",  vimeoId: "803985634",  client: "Heineken",      title: "The Cleaners" },
+  { id: "seed-3",  vimeoId: "1131470962", client: "Diriyah FC",    title: "Underdogs" },
+  { id: "seed-4",  vimeoId: "1009764873", client: "Denner",        title: "The Good Life (DC)" },
+  { id: "seed-5",  vimeoId: "216957056",  client: "Du",            title: "The Men Sitting Next To You" },
+  { id: "seed-6",  vimeoId: "121774920",  client: "Du",            title: "Too Distressing" },
+  { id: "seed-7",  vimeoId: "898044833",  client: "L'Occitane",    title: "" },
+  { id: "seed-8",  vimeoId: "682546048",  client: "Molto Fino",    title: "Feeds A Village" },
+  { id: "seed-9",  vimeoId: "695205162",  client: "Jeep",          title: "Rewild Yourself" },
+  { id: "seed-10", vimeoId: "573367624",  client: "Rolling Stone", title: "Rockin' Mamas" },
+  { id: "seed-11", vimeoId: "316674560",  client: "Diesel",        title: "Be A Follower" },
+  { id: "seed-12", vimeoId: "223460819",  client: "Fischer",       title: "The Naked Truth" },
 ];
 
 /** Extract a numeric Vimeo ID from a bare ID or a Vimeo URL. Null if invalid. */
@@ -783,7 +849,7 @@ with:
 ```tsx
 import { Fragment, useEffect, useState } from "react";
 import VideoModal from "./VideoModal";
-import { slotForIndex, chunkIntoRows } from "@/lib/layout";
+import { slotForIndex, layoutRows } from "@/lib/layout";
 import type { VideoWithThumbnail } from "@/lib/videos";
 ```
 
@@ -836,42 +902,51 @@ export default function Portfolio({ videos }: Props) {
 
 - [ ] **Step 5: Replace the desktop work section**
 
-Replace the entire desktop `<section id="work"> … </section>` block (the five hand-coded `<div className="row">` rows) with:
+Replace the entire desktop `<section id="work"> … </section>` block (the seven hand-coded `<div className="row">` rows, including the two `.row.is-full` featured rows) with:
 
 ```tsx
           <section id="work">
-            {chunkIntoRows(videos).map((row, rowIndex) => (
-              <div className="row" key={rowIndex}>
-                {row.map((v, colIndex) => {
-                  const slot = slotForIndex(rowIndex * 2 + colIndex);
-                  const caption = captionFor(v);
-                  return (
-                    <Fragment key={v.id}>
-                      <button
-                        type="button"
-                        className="tile-media is-video"
-                        style={slot.desktop.media}
-                        onClick={open(v.vimeoId)}
-                        aria-label={`Play ${caption}`}
-                      >
-                        {v.thumbnail && <img src={v.thumbnail} alt={caption} />}
-                        <PlayIcon />
-                      </button>
-                      <div className="tile-label" style={slot.desktop.label}>
-                        <span className="client">{v.client}</span>
-                        {v.title && <span className="ttl">{v.title}</span>}
-                      </div>
-                    </Fragment>
-                  );
-                })}
-              </div>
-            ))}
+            {(() => {
+              const rows = layoutRows(videos);
+              // Track the global video index so each tile can look up its slot.
+              let videoIndex = 0;
+              return rows.map((row, rowIndex) => {
+                const rowClass = row.kind === "featured" ? "row is-full" : "row";
+                return (
+                  <div className={rowClass} key={rowIndex}>
+                    {row.items.map((v) => {
+                      const slot = slotForIndex(videoIndex);
+                      videoIndex += 1;
+                      const caption = captionFor(v);
+                      return (
+                        <Fragment key={v.id}>
+                          <button
+                            type="button"
+                            className="tile-media is-video"
+                            style={slot.desktop.media}
+                            onClick={open(v.vimeoId)}
+                            aria-label={`Play ${caption}`}
+                          >
+                            {v.thumbnail && <img src={v.thumbnail} alt={caption} />}
+                            <PlayIcon />
+                          </button>
+                          <div className="tile-label" style={slot.desktop.label}>
+                            <span className="client">{v.client}</span>
+                            {v.title && <span className="ttl">{v.title}</span>}
+                          </div>
+                        </Fragment>
+                      );
+                    })}
+                  </div>
+                );
+              });
+            })()}
           </section>
 ```
 
 - [ ] **Step 6: Replace the mobile work section**
 
-Replace the entire mobile `<section id="work-m"> … </section>` block (the ten hand-coded `<div className="tile">` tiles) with:
+Replace the entire mobile `<section id="work-m"> … </section>` block (the hand-coded `<div className="tile">` tiles) with:
 
 ```tsx
         <section id="work-m">
@@ -908,12 +983,12 @@ Expected: compiles with no type errors.
 - [ ] **Step 8: Verify the site renders identically**
 
 Run: `npm run dev`, then open `http://localhost:3000`:
-- **Desktop (wide window):** the collage shows 5 rows / 10 video tiles in the same bespoke arrangement as before; every tile shows its Vimeo thumbnail; labels read correctly (Heineken — The Cleaners, Diriyah FC — Underdogs, … L'Occitane with no title line, … Fischer — The Naked Truth).
-- **Mobile (narrow window or device emulation):** 10 stacked tiles with the same per-tile proportions and labels.
+- **Desktop (wide window):** the collage shows 7 rows / 12 video tiles — featured full-width Toyota at row 1, paired rows for Heineken+Diriyah and Denner+Du, featured full-width Du - Too Distressing at row 4, then paired rows for L'Occitane+Molto Fino, Jeep+Rolling Stone, and Diesel+Fischer. Every tile shows its Vimeo thumbnail; labels read correctly (Toyota — If, Heineken — The Cleaners, … L'Occitane with no title line, … Fischer — The Naked Truth).
+- **Mobile (narrow window or device emulation):** 12 stacked tiles with the same per-tile proportions and labels. The two featured tiles (Toyota and Du - Too Distressing) render at a 16:9 aspect.
 - Clicking any tile opens the video modal and the video plays.
-- Scroll-in fade animations and the nav underline still behave as before.
+- Scroll-in fade animations and the nav underline still behave as before. Featured rows fade up; paired rows still slide in from the sides.
 
-This must match the current production site exactly. If anything differs, fix before committing.
+The desktop arrangement must match the current production site exactly. Mobile gains the two featured tiles (which were desktop-only before this refactor) — that is intentional. If anything else differs, fix before committing.
 
 - [ ] **Step 9: Commit**
 
@@ -1071,7 +1146,9 @@ export default function AdminEditor({ initialVideos }: Props) {
                   onChange={(e) => updateField(index, "title", e.target.value)}
                 />
                 <span style={S.hint}>
-                  #{index + 1} → row {Math.floor(index / 2) + 1}, {slot.side}
+                  #{index + 1} → {slot.kind === "featured"
+                    ? "featured full-width row"
+                    : `paired row, ${slot.kind}`}
                 </span>
                 {errs.map((msg) => (
                   <span key={msg} style={S.error}>
@@ -1171,9 +1248,9 @@ Expected: compiles with no type errors.
 - [ ] **Step 5: Verify the admin UI**
 
 Run: `npm run dev`. Log in at `http://localhost:3000/admin/login` with `devpassword` (from `.env.local`), landing on `/admin`. Confirm:
-- 10 numbered rows, each pre-filled with a Vimeo ID, client, and title; row 5 (L'Occitane) has an empty title.
-- Each row shows a hint like `#1 → row 1, left`, `#2 → row 1, right`, `#3 → row 2, left`.
-- **Add video** appends row 11 with empty fields and the hint `#11 → row 6, left`.
+- 12 numbered rows, each pre-filled with a Vimeo ID, client, and title; row 7 (L'Occitane) has an empty title.
+- Each row shows a hint like `#1 → featured full-width row`, `#2 → paired row, left`, `#3 → paired row, right`, `#6 → featured full-width row`.
+- **Add video** appends row 13 with empty fields and the hint `#13 → featured full-width row` (it wraps back to slot 1).
 - ↑ / ↓ swap adjacent rows and the numbers + hints update; ↑ is disabled on row 1, ↓ on the last row.
 - ✕ asks for confirmation, then removes the row; the rows below renumber with no gap.
 - Clear a row's Vimeo link and click **Save** → that row shows "Enter a valid Vimeo link or numeric ID." and nothing is saved.
@@ -1209,7 +1286,7 @@ npm run build
 npm test
 ```
 
-Expected: lint clean; build compiles; all unit tests pass (25 tests across the three `lib/*.test.ts` files).
+Expected: lint clean; build compiles; all unit tests pass (28 tests across the three `lib/*.test.ts` files).
 
 - [ ] **Step 2: USER ACTION — create the Vercel Blob store**
 
@@ -1226,22 +1303,22 @@ Expected: `.env.local` now contains both `BLOB_READ_WRITE_TOKEN` and `ADMIN_PASS
 
 - [ ] **Step 5: Verify the full save cycle locally**
 
-Run: `npm run dev`. Log in to `/admin`. The list shows the 10 seed videos (Blob is still empty, so `getVideos()` falls back to the seed). Click **Save**:
+Run: `npm run dev`. Log in to `/admin`. The list shows the 12 seed videos (Blob is still empty, so `getVideos()` falls back to the seed). Click **Save**:
 - "Saved — the site is updated." appears. This first save writes `videos.json` into Blob — the list is now seeded.
-- Open `http://localhost:3000` → the homepage still shows the same 10 videos.
+- Open `http://localhost:3000` → the homepage still shows the same 12 videos.
 
 - [ ] **Step 6: Verify add / edit / delete / reorder end-to-end**
 
 In `/admin`:
-1. **Add** a real 11th Vimeo video (link + client), Save → open `/` → it appears as an 11th tile, reusing slot 1's shape in a new desktop row 6, and as an 11th mobile card with card 1's aspect ratio.
+1. **Add** a real 13th Vimeo video (link + client), Save → open `/` → it appears as a 13th tile, reusing slot 1's shape (a new featured full-width row), and as a 13th mobile card at the featured 16:9 aspect.
 2. **Edit** a client name, Save → the new label shows on `/`.
-3. **Delete** video #4, Save → the homepage now has one fewer tile and everything after #4 shifted up with no gap.
-4. **Reorder** with ↑/↓, Save → the homepage order matches.
+3. **Delete** video #4, Save → the homepage now has one fewer tile and everything after #4 shifted up with no gap. Note that this shifts which videos land in the two featured slots (1 and 6) — that is expected; the blueprint is shape, not identity.
+4. **Reorder** with ↑/↓, Save → the homepage order matches. Reordering a video into/out of a featured slot changes its rendered shape accordingly.
 5. Confirm none of these triggered a Vercel deployment (the dashboard's Deployments list is unchanged).
 
-- [ ] **Step 7: Verify the odd-count desktop behavior**
+- [ ] **Step 7: Verify the lone-left desktop behavior**
 
-With an odd number of videos in the list, load `/` on a wide screen: the final desktop row has a single tile on the left in its designed shape and empty space on the right. This is the intended behavior.
+If you delete videos until the list ends on a `left`-kind slot (e.g. delete the last video so the list ends at slot 11 / Diesel), load `/` on a wide screen: the final desktop row has a single tile on the left in its designed shape and empty space on the right. This is the intended behavior.
 
 - [ ] **Step 8: Deploy and verify in production**
 
@@ -1273,4 +1350,4 @@ git commit -m "chore: finalize video admin integration"
 
 ## Spec Coverage
 
-Every requirement in `docs/superpowers/specs/2026-05-21-video-admin-design.md` maps to a task: the 10-slot blueprint and `(N-1) mod 10` mapping → T1; variable count + odd-row rule → T1 (`chunkIntoRows`) + T4; the no-gaps rule → T2 (`prepareVideos`); Vercel Blob `videos.json` + the `Video` type → T2; the data-driven public site → T4; the admin (3 fields, add/edit/delete/reorder, live hint, validated Save + revalidate) → T5; password auth → T3; the 3-phase build order → the wave structure; verification → each task's verify steps + T6.
+Every requirement in `docs/superpowers/specs/2026-05-21-video-admin-design.md` maps to a task: the 12-slot blueprint with `featured`/`left`/`right` kinds and `(N-1) mod 12` mapping → T1; variable count + lone-left rule → T1 (`layoutRows`) + T4; the no-gaps rule → T2 (`prepareVideos`); Vercel Blob `videos.json` + the `Video` type → T2; the data-driven public site (including the `.row.is-full` featured rows) → T4; the admin (3 fields, add/edit/delete/reorder, live hint, validated Save + revalidate) → T5; password auth → T3; the 3-phase build order → the wave structure; verification → each task's verify steps + T6.
