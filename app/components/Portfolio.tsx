@@ -1,12 +1,18 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import VideoModal from "./VideoModal";
+import { slotForIndex, layoutRows } from "@/lib/layout";
+import type { VideoWithThumbnail } from "@/lib/videos";
 
 type Props = {
-  thumbnails: Record<string, string | null>;
+  videos: VideoWithThumbnail[];
 };
+
+function captionFor(v: VideoWithThumbnail): string {
+  return v.title ? `${v.client} — ${v.title}` : v.client;
+}
 
 const PlayIcon = () => (
   <span className="play-overlay" aria-hidden>
@@ -16,12 +22,11 @@ const PlayIcon = () => (
   </span>
 );
 
-export default function Portfolio({ thumbnails }: Props) {
+export default function Portfolio({ videos }: Props) {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"work" | "contact">("work");
   const [navHidden, setNavHidden] = useState(false);
   const open = (id: string) => () => setActiveVideo(id);
-  const thumb = (id: string, fallback: string) => thumbnails[id] || fallback;
 
   // Mobile: hide the floating nav when scrolling down, reveal it when scrolling
   // up. Near the top of the page the nav stays visible regardless of direction.
@@ -108,205 +113,40 @@ export default function Portfolio({ thumbnails }: Props) {
           </header>
 
           <section id="work">
-            {/* ROW 1 (featured, full-width): Toyota — If */}
-            <div className="row is-full">
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "1.65%", top: "2.22%", width: "96.7%", height: "88%" }}
-                onClick={open("291694491")}
-                aria-label="Play Toyota — If"
-              >
-                <img src={thumb("291694491", "/images/Heinken.png")} alt="Toyota — If" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "1.65%", top: "92%", width: "96.7%" }}>
-                <span className="client">Toyota</span>
-                <span className="ttl">If</span>
-              </div>
-            </div>
-
-            {/* ROW 2: Heineken / McDonald's */}
-            <div className="row">
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "1.65%", top: "30.97%", width: "62.35%", height: "57.50%" }}
-                onClick={open("803985634")}
-                aria-label="Play Heineken — The Cleaners"
-              >
-                <img src={thumb("803985634", "/images/Heinken.png")} alt="Heineken — The Cleaners" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "1.87%", top: "89.86%", width: "62.35%" }}>
-                <span className="client">Heineken</span>
-                <span className="ttl">The Cleaners</span>
-              </div>
-
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "66.39%", top: "2.22%", width: "33.50%", height: "89.03%" }}
-                onClick={open("1131470962")}
-                aria-label="Play Diriyah FC — Underdogs"
-              >
-                <img src={thumb("1131470962", "/images/Mcdonald%E2%80%99s.png")} alt="Diriyah FC — Underdogs" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "66.39%", top: "92.64%", width: "33.50%" }}>
-                <span className="client">Diriyah FC</span>
-                <span className="ttl">Underdogs</span>
-              </div>
-            </div>
-
-            {/* ROW 3: Denner / Du */}
-            <div className="row">
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "1.65%", top: "2.22%", width: "39.63%", height: "58.89%" }}
-                onClick={open("1009764873")}
-                aria-label="Play Denner — The Good Life"
-              >
-                <img src={thumb("1009764873", "/images/Denner.png")} alt="Denner — The Good Life" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "1.65%", top: "62.64%", width: "39.63%" }}>
-                <span className="client">Denner</span>
-                <span className="ttl">The Good Life (DC)</span>
-              </div>
-
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "43.14%", top: "7.36%", width: "56.82%", height: "84.44%" }}
-                onClick={open("216957056")}
-                aria-label="Play Du — The Men Sitting Next To You"
-              >
-                <img src={thumb("216957056", "/images/DU.png")} alt="Du — The Men Sitting Next To You" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "43.14%", top: "92.22%", width: "56.82%" }}>
-                <span className="client">Du</span>
-                <span className="ttl">The Men Sitting Next To You</span>
-              </div>
-            </div>
-
-            {/* ROW 4 (featured, full-width): Du — Too Distressing */}
-            <div className="row is-full">
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "1.65%", top: "2.22%", width: "96.7%", height: "88%" }}
-                onClick={open("121774920")}
-                aria-label="Play Du — Too Distressing"
-              >
-                <img src={thumb("121774920", "/images/DU.png")} alt="Du — Too Distressing" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "1.65%", top: "92%", width: "96.7%" }}>
-                <span className="client">Du</span>
-                <span className="ttl">Too Distressing</span>
-              </div>
-            </div>
-
-            {/* ROW 5: L'Occitane / Molto Fino */}
-            <div className="row">
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "1.65%", top: "2.22%", width: "33.36%", height: "89.03%" }}
-                onClick={open("898044833")}
-                aria-label="Play L'Occitane"
-              >
-                <img src={thumb("898044833", "/images/L%E2%80%99OCCITANE.png")} alt="L&apos;Occitane" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "1.65%", top: "92.64%", width: "33.36%" }}>
-                <span className="client">L&apos;Occitane</span>
-              </div>
-
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "36.49%", top: "28.06%", width: "63.55%", height: "63.33%" }}
-                onClick={open("682546048")}
-                aria-label="Play Molto Fino — Feeds A Village"
-              >
-                <img src={thumb("682546048", "/images/MOLTO%20FINO.png")} alt="Molto Fino — Feeds A Village" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "36.49%", top: "92.64%", width: "63.55%" }}>
-                <span className="client">Molto Fino</span>
-                <span className="ttl">Feeds A Village</span>
-              </div>
-            </div>
-
-            {/* ROW 6: Jeep / Rolling Stone */}
-            <div className="row">
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "2.17%", top: "5.69%", width: "56.82%", height: "63.75%" }}
-                onClick={open("695205162")}
-                aria-label="Play Jeep — Rewild Yourself"
-              >
-                <img src={thumb("695205162", "/images/LAVAZZA.png")} alt="Jeep — Rewild Yourself" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "2.17%", top: "70.83%", width: "56.82%" }}>
-                <span className="client">Jeep</span>
-                <span className="ttl">Rewild Yourself</span>
-              </div>
-
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "61.23%", top: "39.86%", width: "38.66%", height: "47.22%" }}
-                onClick={open("573367624")}
-                aria-label="Play Rolling Stone — Rockin' Mamas"
-              >
-                <img src={thumb("573367624", "/images/ROLLING%20STONE.png")} alt="Rolling Stone — Rockin&apos; Mamas" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "61.23%", top: "88.47%", width: "38.66%" }}>
-                <span className="client">Rolling Stone</span>
-                <span className="ttl">Rockin&apos; Mamas</span>
-              </div>
-            </div>
-
-            {/* ROW 7: Diesel / Hardees */}
-            <div className="row">
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "2.17%", top: "17.08%", width: "63.55%", height: "63.33%" }}
-                onClick={open("316674560")}
-                aria-label="Play Diesel — Be A Follower"
-              >
-                <img src={thumb("316674560", "/images/DIESEL.png")} alt="Diesel — Be A Follower" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "2.17%", top: "81.81%", width: "63.55%" }}>
-                <span className="client">Diesel</span>
-                <span className="ttl">Be A Follower</span>
-              </div>
-
-              <button
-                type="button"
-                className="tile-media is-video"
-                style={{ left: "67.81%", top: "2.22%", width: "32.09%", height: "89.03%" }}
-                onClick={open("223460819")}
-                aria-label="Play Fischer — The Naked Truth"
-              >
-                <img src={thumb("223460819", "/images/Hardees.png")} alt="Fischer — The Naked Truth" />
-                <PlayIcon />
-              </button>
-              <div className="tile-label" style={{ left: "67.81%", top: "92.64%", width: "32.09%" }}>
-                <span className="client">Fischer</span>
-                <span className="ttl">The Naked Truth</span>
-              </div>
-            </div>
+            {(() => {
+              const rows = layoutRows(videos);
+              let videoIndex = 0;
+              return rows.map((row, rowIndex) => {
+                const rowClass = row.kind === "featured" ? "row is-full" : "row";
+                return (
+                  <div className={rowClass} key={rowIndex}>
+                    {row.items.map((v) => {
+                      const slot = slotForIndex(videoIndex);
+                      videoIndex += 1;
+                      const caption = captionFor(v);
+                      return (
+                        <Fragment key={v.id}>
+                          <button
+                            type="button"
+                            className="tile-media is-video"
+                            style={slot.desktop.media}
+                            onClick={open(v.vimeoId)}
+                            aria-label={`Play ${caption}`}
+                          >
+                            {v.thumbnail && <img src={v.thumbnail} alt={caption} />}
+                            <PlayIcon />
+                          </button>
+                          <div className="tile-label" style={slot.desktop.label}>
+                            <span className="client">{v.client}</span>
+                            {v.title && <span className="ttl">{v.title}</span>}
+                          </div>
+                        </Fragment>
+                      );
+                    })}
+                  </div>
+                );
+              });
+            })()}
           </section>
 
           <section id="contact" className="contact">
@@ -366,208 +206,28 @@ export default function Portfolio({ thumbnails }: Props) {
         </header>
 
         <section id="work-m">
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "1.858" }}
-              onClick={open("291694491")}
-              aria-label="Play Toyota — If"
-            >
-              <img src={thumb("291694491", "/images/Heinken.png")} alt="Toyota — If" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">Toyota</span>
-              <span className="ttl">If</span>
-            </div>
-          </div>
-
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "2.014" }}
-              onClick={open("803985634")}
-              aria-label="Play Heineken — The Cleaners"
-            >
-              <img src={thumb("803985634", "/images/Heinken.png")} alt="Heineken — The Cleaners" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">Heineken</span>
-              <span className="ttl">The Cleaners</span>
-            </div>
-          </div>
-
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "0.699" }}
-              onClick={open("1131470962")}
-              aria-label="Play Diriyah FC — Underdogs"
-            >
-              <img src={thumb("1131470962", "/images/Mcdonald%E2%80%99s.png")} alt="Diriyah FC — Underdogs" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">Diriyah FC</span>
-              <span className="ttl">Underdogs</span>
-            </div>
-          </div>
-
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "1.250" }}
-              onClick={open("1009764873")}
-              aria-label="Play Denner — The Good Life"
-            >
-              <img src={thumb("1009764873", "/images/Denner.png")} alt="Denner — The Good Life" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">Denner</span>
-              <span className="ttl">The Good Life (DC)</span>
-            </div>
-          </div>
-
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "1.250" }}
-              onClick={open("216957056")}
-              aria-label="Play Du — The Men Sitting Next To You"
-            >
-              <img src={thumb("216957056", "/images/DU.png")} alt="Du — The Men Sitting Next To You" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">Du</span>
-              <span className="ttl">The Men Sitting Next To You</span>
-            </div>
-          </div>
-
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "1.858" }}
-              onClick={open("121774920")}
-              aria-label="Play Du — Too Distressing"
-            >
-              <img src={thumb("121774920", "/images/DU.png")} alt="Du — Too Distressing" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">Du</span>
-              <span className="ttl">Too Distressing</span>
-            </div>
-          </div>
-
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "0.695" }}
-              onClick={open("898044833")}
-              aria-label="Play L'Occitane"
-            >
-              <img src={thumb("898044833", "/images/L%E2%80%99OCCITANE.png")} alt="L&apos;Occitane" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">L&apos;Occitane</span>
-            </div>
-          </div>
-
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "1.865" }}
-              onClick={open("682546048")}
-              aria-label="Play Molto Fino — Feeds A Village"
-            >
-              <img src={thumb("682546048", "/images/MOLTO%20FINO.png")} alt="Molto Fino — Feeds A Village" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">Molto Fino</span>
-              <span className="ttl">Feeds A Village</span>
-            </div>
-          </div>
-
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "1.655" }}
-              onClick={open("695205162")}
-              aria-label="Play Jeep — Rewild Yourself"
-            >
-              <img src={thumb("695205162", "/images/LAVAZZA.png")} alt="Jeep — Rewild Yourself" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">Jeep</span>
-              <span className="ttl">Rewild Yourself</span>
-            </div>
-          </div>
-
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "1.519" }}
-              onClick={open("573367624")}
-              aria-label="Play Rolling Stone — Rockin' Mamas"
-            >
-              <img src={thumb("573367624", "/images/ROLLING%20STONE.png")} alt="Rolling Stone — Rockin&apos; Mamas" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">Rolling Stone</span>
-              <span className="ttl">Rockin&apos; Mamas</span>
-            </div>
-          </div>
-
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "1.865" }}
-              onClick={open("316674560")}
-              aria-label="Play Diesel — Be A Follower"
-            >
-              <img src={thumb("316674560", "/images/DIESEL.png")} alt="Diesel — Be A Follower" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">Diesel</span>
-              <span className="ttl">Be A Follower</span>
-            </div>
-          </div>
-
-          <div className="tile">
-            <button
-              type="button"
-              className="tile-media is-video"
-              style={{ aspectRatio: "0.670" }}
-              onClick={open("223460819")}
-              aria-label="Play Fischer — The Naked Truth"
-            >
-              <img src={thumb("223460819", "/images/Hardees.png")} alt="Fischer — The Naked Truth" />
-              <PlayIcon />
-            </button>
-            <div className="tile-label">
-              <span className="client">Fischer</span>
-              <span className="ttl">The Naked Truth</span>
-            </div>
-          </div>
+          {videos.map((v, index) => {
+            const slot = slotForIndex(index);
+            const caption = captionFor(v);
+            return (
+              <div className="tile" key={v.id}>
+                <button
+                  type="button"
+                  className="tile-media is-video"
+                  style={{ aspectRatio: slot.mobile.aspectRatio }}
+                  onClick={open(v.vimeoId)}
+                  aria-label={`Play ${caption}`}
+                >
+                  {v.thumbnail && <img src={v.thumbnail} alt={caption} />}
+                  <PlayIcon />
+                </button>
+                <div className="tile-label">
+                  <span className="client">{v.client}</span>
+                  {v.title && <span className="ttl">{v.title}</span>}
+                </div>
+              </div>
+            );
+          })}
         </section>
 
         <section id="contact-m" className="contact">

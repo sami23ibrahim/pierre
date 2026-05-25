@@ -1,19 +1,6 @@
 import Portfolio from "./components/Portfolio";
-
-const VIDEO_IDS = [
-  "291694491",  // Toyota — If (featured, full-width)
-  "803985634",  // Heineken
-  "1131470962", // Diriyah FC
-  "1009764873", // Denner
-  "216957056",  // Du
-  "121774920",  // Du — Too Distressing (featured, full-width)
-  "898044833",  // L'Occitane
-  "682546048",  // Molto Fino
-  "695205162",  // Jeep — Rewild Yourself
-  "573367624",  // Rolling Stone
-  "316674560",  // Diesel
-  "223460819",  // Fischer
-];
+import { getVideos } from "@/lib/videos";
+import type { VideoWithThumbnail } from "@/lib/videos";
 
 async function fetchVimeoThumbnail(id: string): Promise<string | null> {
   try {
@@ -30,10 +17,13 @@ async function fetchVimeoThumbnail(id: string): Promise<string | null> {
 }
 
 export default async function Home() {
-  const entries = await Promise.all(
-    VIDEO_IDS.map(async (id) => [id, await fetchVimeoThumbnail(id)] as const)
+  const videos = await getVideos();
+  const withThumbnails: VideoWithThumbnail[] = await Promise.all(
+    videos.map(async (video) => ({
+      ...video,
+      thumbnail: await fetchVimeoThumbnail(video.vimeoId),
+    }))
   );
-  const thumbnails = Object.fromEntries(entries);
 
-  return <Portfolio thumbnails={thumbnails} />;
+  return <Portfolio videos={withThumbnails} />;
 }
