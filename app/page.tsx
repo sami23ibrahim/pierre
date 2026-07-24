@@ -4,7 +4,7 @@ import { getVideos } from "@/lib/videos";
 import type { VideoWithThumbnail } from "@/lib/videos";
 
 // Flip to false to take the portfolio live.
-const UNDER_CONSTRUCTION = true;
+const UNDER_CONSTRUCTION = false;
 
 async function fetchVimeoThumbnail(id: string): Promise<string | null> {
   try {
