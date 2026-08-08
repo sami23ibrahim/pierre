@@ -107,13 +107,13 @@ videos get ids `n-1`…`n-7`.
 | 10 | Heineken | The Cleaners | 803985634 | existing |
 | 11 | CST | The Hand | **pending** | ⚠ not on the Vimeo account (all 67 checked) — awaiting link/upload |
 | 12 | Jeep | Rewild Yourself | 695205162 | existing |
-| 13 | Lavazza | Alexa | 648106703 | new |
+| 13 | Denner | The Good Life (DC) | 1009764873 | existing (kept after all — replaces Lavazza) |
 | 14 | Du | The Man Sitting Next To You | 216957056 | existing · list wording "Man" kept (was "Men") |
 | 15 | Toyota | If | 291694491 | existing · featured (slot 0 of unit 3) |
 | 16 | Molto Fino | Feeds A Town | 682546048 | existing · ⚠ Vimeo/stored say "feeds a village" — list's "Town" kept, flag at review |
 | 17 | Fisher | The Naked Truth | 223460819 | existing · ⚠ stored client "Fischer" — list's "Fisher" kept, flag at review |
 | 18 | Center Point | The Piano | 194804690 | new (Vimeo: "CENTER POINT . piano") |
-| — | ~~Denner — The Good Life (DC)~~ | | 1009764873 | **dropped** (not in the curated list) |
+| — | ~~Lavazza — Alexa~~ | | 648106703 | **removed 2026-08-08**: Vimeo rights-locked (Article 17 music match) — cannot be made Public, no thumbnail available; Denner takes its slot per Sami |
 
 The featured slots land on videos 1, 8, 15 → **Visa, Du — Too Distressing,
 Toyota** — matching the emphasis in Sami's list. **This alignment assumes all
