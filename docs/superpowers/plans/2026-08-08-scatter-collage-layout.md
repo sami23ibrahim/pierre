@@ -1,5 +1,10 @@
 # Scatter-Collage Layout + Curated Order Implementation Plan
 
+> **Note (post-execution):** executed 2026-08-08. After Sami's review the
+> geometry was revised — caption clearance shifts + partial-unit rescaling via
+> `slotStyles()`; the spec (§1) holds the final numbers, which supersede the
+> LAYOUT/test snippets below.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the 12-slot collage blueprint with the 7-slot scatter unit measured from `docs/reference/newlayout.jpeg`, and stage the curated 18-video order for a safe local preview (production Blob untouched until ship).

@@ -3,7 +3,7 @@
 
 import { Fragment, useEffect, useState } from "react";
 import VideoModal from "./VideoModal";
-import { slotForIndex, layoutUnits, unitAspect } from "@/lib/layout";
+import { slotForIndex, layoutUnits, unitAspect, slotStyles } from "@/lib/layout";
 import type { VideoWithThumbnail } from "@/lib/videos";
 
 type Props = {
@@ -124,6 +124,7 @@ export default function Portfolio({ videos }: Props) {
                 >
                   {unit.map((v) => {
                     const slot = slotForIndex(videoIndex);
+                    const styles = slotStyles(videoIndex, unit.length);
                     videoIndex += 1;
                     const caption = captionFor(v);
                     const reveal =
@@ -137,14 +138,14 @@ export default function Portfolio({ videos }: Props) {
                         <button
                           type="button"
                           className={`tile-media is-video ${reveal}`}
-                          style={slot.desktop.media}
+                          style={styles.media}
                           onClick={open(v.vimeoId)}
                           aria-label={`Play ${caption}`}
                         >
                           {v.thumbnail && <img src={v.thumbnail} alt={caption} />}
                           <PlayIcon />
                         </button>
-                        <div className="tile-label" style={slot.desktop.label}>
+                        <div className="tile-label" style={styles.label}>
                           <span className="client">{v.client}</span>
                           {v.title && <span className="ttl">{v.title}</span>}
                         </div>

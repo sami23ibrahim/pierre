@@ -20,8 +20,17 @@ So the whole 7-card composition is scaled up uniformly (×1.2402) until its
 widest cards sit on the site's normal 1.65 % side margins (same as today's
 grid). Uniform scaling preserves every card's aspect ratio and the stagger;
 the featured card is re-centered (it is deliberately centered in the
-reference). Vertical percentages are unchanged by the scale; the unit canvas
-becomes 1280×1984 (aspect ≈ 0.645) instead of the reference's 1280×1600.
+reference).
+
+**Caption clearance (revision after first build):** the reference has no
+captions, and placing two-line labels in its raw gaps let lower cards paint
+over them (featured→slot 1, slot 2→slot 4, slot 4→slot 5). Each band below
+the featured card is therefore pushed down just far enough for every caption
+to have guaranteed room — 45 / 85 / 110 px on the reference scale, computed
+so that a 460 px-wide two-line caption block (16 px gap + 44 px text) never
+intersects a lower card sharing its x-range. Card shapes are untouched; the
+slot 2/3 interleave survives (27 px). Unit canvas: **1280×2146**
+(aspect ≈ 0.596).
 
 That composition is one repeating **unit**: videos 1–7 fill unit 1, videos
 8–14 unit 2, and so on. Final card boxes (percent of unit width/height,
@@ -29,28 +38,29 @@ rounded to 2 dp):
 
 | Slot | Kind     | Box (left, top, width, height) | Aspect | Notes |
 |------|----------|--------------------------------|--------|-------|
-| 0    | featured | 13.57, 5.50, 72.86, 23.37      | 2.01   | horizontally centered |
-| 1    | left     | 5.72, 30.50, 33.33, 16.13      | 1.33   | small |
-| 2    | right    | 45.06, 29.62, 45.93, 23.75     | 1.25   | tall — starts above slot 1, ends below it |
-| 3    | left     | 1.65, 50.00, 41.27, 20.13      | 1.32   | starts *above* slot 2's bottom edge (columns interleave); touches left margin |
-| 4    | right    | 45.06, 54.38, 53.29, 19.12     | 1.80   | touches right margin (98.35) |
-| 5    | left     | 1.65, 75.25, 58.13, 22.75      | 1.65   | large; touches left margin |
-| 6    | right    | 62.30, 78.25, 33.33, 16.13     | 1.33   | small |
+| 0    | featured | 13.57, 5.09, 72.86, 21.61      | 2.01   | horizontally centered |
+| 1    | left     | 5.72, 30.31, 33.33, 14.91      | 1.33   | small |
+| 2    | right    | 45.06, 29.50, 45.93, 21.96     | 1.25   | tall — starts above slot 1, ends below it |
+| 3    | left     | 1.65, 50.21, 41.28, 18.61      | 1.32   | starts *above* slot 2's bottom edge (columns interleave); touches left margin |
+| 4    | right    | 45.06, 54.25, 53.29, 17.68     | 1.80   | touches right margin (98.35) |
+| 5    | left     | 1.65, 74.73, 58.14, 21.04      | 1.65   | large; touches left margin |
+| 6    | right    | 62.31, 77.51, 33.33, 14.91     | 1.33   | small |
 
 The left/right edges stay deliberately ragged (only the deepest cards touch
-the margins) — that is the scatter look, at full width.
+the margins) — that is the scatter look, at full width. A regression test
+asserts the no-card-covers-a-caption invariant directly on `LAYOUT`.
 
 Slot order = reading order used by the curated list: featured first, then each
 band left card before right card. Video N (1-based) renders in slot (N−1) mod 7.
 
 **Labels:** same treatment as today — absolutely positioned under each card:
-`left` = card left, `width` = card width, `top` = card bottom + 0.75 % of unit
-height (≈ 13 px at full width, matching the current label gap). Existing
-`.tile-label` typography unchanged (CSS uppercases it).
+`left` = card left, `width` = card width, `top` = card bottom + 16 px (on the
+1280 canvas scale). Existing `.tile-label` typography unchanged (CSS
+uppercases it).
 
 **Because slots 2 and 3 overlap vertically across columns, a unit renders as
 ONE positioning canvas** (one `.row` holding up to 7 tiles, `aspect-ratio:
-1280 / 1984 ≈ 0.645`), not as stacked featured/pair rows. `lib/layout.ts`
+1280 / 2146 ≈ 0.596`), not as stacked featured/pair rows. `lib/layout.ts`
 changes from "12 slots grouped into featured/paired rows" to "7 slots grouped
 into units":
 
@@ -59,12 +69,13 @@ into units":
 - `slotForIndex(i)` — unchanged logic, cycle length 7.
 - `layoutRows(items)` → `layoutUnits(items)`: chunks of 7, last chunk may be
   partial (1–6 items).
-- **Partial trailing unit:** the unit's height shrinks to fit its cards —
-  rendered aspect = `(1280/1984) / (maxBottom + pad)` where `maxBottom` is the
-  largest card-bottom fraction among present slots and `pad` ≈ 0.04 (label +
-  breathing room). With 18 videos the last unit holds 4 cards (slots 0–3) at
-  ~74 % height. Expose this as a helper in `lib/layout.ts`
-  (e.g. `unitAspect(count)`), unit-tested.
+- **Partial trailing unit:** the unit's height shrinks to fit its cards.
+  `unitAspect(count)` = full aspect ÷ `f`, where `f` = deepest present
+  caption bottom + padding (1 for a full unit). Crucially the slot
+  percentages are **rescaled by 1/f** for that unit (`slotStyles(index,
+  count)`) so every card keeps exactly the same rendered pixel shape and
+  position as in a full unit — the row just ends sooner. (First build got
+  this wrong — cards squashed — now locked by a shape-invariance test.)
 
 **Reveal animations:** current CSS keys off `nth-child(1)/(3)` inside pair
 rows — that breaks with 7 tiles per row. Replace with per-slot classes derived
