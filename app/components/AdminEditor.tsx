@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { layoutRows } from "@/lib/layout";
+import { layoutUnits, slotForIndex } from "@/lib/layout";
 import { saveVideosAction } from "@/app/admin/actions";
 import type { Video, DraftVideo, PrepareResult } from "@/lib/videos";
 
@@ -71,7 +71,7 @@ export default function AdminEditor({ initialVideos }: Props) {
     });
   };
 
-  const rows = layoutRows<Indexed>(
+  const units = layoutUnits<Indexed>(
     drafts.map((draft, index) => ({ draft, index })),
   );
 
@@ -99,16 +99,17 @@ export default function AdminEditor({ initialVideos }: Props) {
       </header>
 
       <div style={S.rows}>
-        {rows.map((row, rowIdx) => (
-          <div
-            key={rowIdx}
-            style={row.kind === "featured" ? S.featuredRow : S.pairedRow}
-          >
-            {row.items.map(({ draft, index }) => {
+        {units.map((unit, unitIdx) => (
+          <div key={unitIdx} style={S.unitRow}>
+            {unit.map(({ draft, index }) => {
               const errs = rowErrors[index] ?? [];
               const isLast = index === drafts.length - 1;
+              const featured = slotForIndex(index).kind === "featured";
               return (
-                <article key={draft.id} style={S.card}>
+                <article
+                  key={draft.id}
+                  style={featured ? { ...S.card, gridColumn: "1 / -1" } : S.card}
+                >
                   <div style={S.cardHeader}>
                     <span style={S.badge}>{index + 1}</span>
                     <div style={S.actions}>
@@ -245,8 +246,7 @@ const S: Record<string, React.CSSProperties> = {
     color: "#ddd",
   },
   rows: { display: "flex", flexDirection: "column", gap: 12 },
-  featuredRow: { display: "grid", gridTemplateColumns: "1fr" },
-  pairedRow: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
+  unitRow: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
   card: {
     display: "flex",
     flexDirection: "column",

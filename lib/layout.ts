@@ -9,68 +9,66 @@ export type Slot = {
   mobile: { aspectRatio: string };
 };
 
-/** A row produced by layoutRows: a featured slot alone, or a left+right pair
- * (which degrades to a lone left when the list ends mid-pair). */
-export type LayoutRow<T> =
-  | { kind: "featured"; items: [T] }
-  | { kind: "paired"; items: [T] | [T, T] };
-
 /**
- * The fixed 12-slot collage blueprint, transcribed verbatim from the original
- * hand-tuned tiles plus the two featured full-width rows (Toyota at slot 0,
- * Du - Too Distressing at slot 5). Video N renders in slot (N-1) mod 12, so
- * the layout repeats every 12 videos. This is design, not content — it stays
- * in code.
+ * The 7-slot scatter unit. Card shapes, relative sizes and stagger are
+ * measured programmatically from docs/reference/newlayout.jpeg; the whole
+ * composition is then scaled uniformly (x1.2402) to full bleed — the image
+ * shows the card shapes, not page margins — so the deepest cards sit on the
+ * site's usual 1.65% side margins and the featured card stays centered.
+ * Unit canvas: 1280x1984 (aspect ~0.645). Video N renders in slot
+ * (N-1) mod 7, so the unit repeats every 7 videos — featured cards land on
+ * videos 1, 8, 15, …
  *
- * Note on indexing: the "Video N (1-based) → slot (N-1)" formula is just
- * human-readable shorthand; `slotForIndex` accepts the 0-based array index
- * directly (index 0 → slot 0, index 1 → slot 1, …).
+ * All percentages are relative to the unit canvas. Slots 2 and 3 interleave
+ * vertically across the left/right columns (slot 3 starts above slot 2's
+ * bottom edge), which is why a unit renders as one positioning canvas
+ * rather than stacked rows. Labels sit 0.75% below their card, aligned to
+ * its left edge. This is design, not content — it stays in code.
  */
 export const LAYOUT: Slot[] = [
-  { kind: "featured", desktop: { media: { left: "1.65%",  top: "2.22%",  width: "96.7%",  height: "88%"    }, label: { left: "1.65%",  top: "92%",    width: "96.7%"  } }, mobile: { aspectRatio: "1.778" } },
-  { kind: "left",     desktop: { media: { left: "1.65%",  top: "30.97%", width: "62.35%", height: "57.50%" }, label: { left: "1.87%",  top: "89.86%", width: "62.35%" } }, mobile: { aspectRatio: "2.014" } },
-  { kind: "right",    desktop: { media: { left: "66.39%", top: "2.22%",  width: "33.50%", height: "89.03%" }, label: { left: "66.39%", top: "92.64%", width: "33.50%" } }, mobile: { aspectRatio: "0.699" } },
-  { kind: "left",     desktop: { media: { left: "1.65%",  top: "2.22%",  width: "39.63%", height: "58.89%" }, label: { left: "1.65%",  top: "62.64%", width: "39.63%" } }, mobile: { aspectRatio: "1.250" } },
-  { kind: "right",    desktop: { media: { left: "43.14%", top: "7.36%",  width: "56.82%", height: "84.44%" }, label: { left: "43.14%", top: "92.22%", width: "56.82%" } }, mobile: { aspectRatio: "1.250" } },
-  { kind: "featured", desktop: { media: { left: "1.65%",  top: "2.22%",  width: "96.7%",  height: "88%"    }, label: { left: "1.65%",  top: "92%",    width: "96.7%"  } }, mobile: { aspectRatio: "1.778" } },
-  { kind: "left",     desktop: { media: { left: "1.65%",  top: "2.22%",  width: "33.36%", height: "89.03%" }, label: { left: "1.65%",  top: "92.64%", width: "33.36%" } }, mobile: { aspectRatio: "0.695" } },
-  { kind: "right",    desktop: { media: { left: "36.49%", top: "28.06%", width: "63.55%", height: "63.33%" }, label: { left: "36.49%", top: "92.64%", width: "63.55%" } }, mobile: { aspectRatio: "1.865" } },
-  { kind: "left",     desktop: { media: { left: "2.17%",  top: "5.69%",  width: "56.82%", height: "63.75%" }, label: { left: "2.17%",  top: "70.83%", width: "56.82%" } }, mobile: { aspectRatio: "1.655" } },
-  { kind: "right",    desktop: { media: { left: "61.23%", top: "39.86%", width: "38.66%", height: "47.22%" }, label: { left: "61.23%", top: "88.47%", width: "38.66%" } }, mobile: { aspectRatio: "1.519" } },
-  { kind: "left",     desktop: { media: { left: "2.17%",  top: "17.08%", width: "63.55%", height: "63.33%" }, label: { left: "2.17%",  top: "81.81%", width: "63.55%" } }, mobile: { aspectRatio: "1.865" } },
-  { kind: "right",    desktop: { media: { left: "67.81%", top: "2.22%",  width: "32.09%", height: "89.03%" }, label: { left: "67.81%", top: "92.64%", width: "32.09%" } }, mobile: { aspectRatio: "0.670" } },
+  { kind: "featured", desktop: { media: { left: "13.57%", top: "5.50%",  width: "72.86%", height: "23.37%" }, label: { left: "13.57%", top: "29.62%", width: "72.86%" } }, mobile: { aspectRatio: "2.011" } },
+  { kind: "left",     desktop: { media: { left: "5.72%",  top: "30.50%", width: "33.33%", height: "16.13%" }, label: { left: "5.72%",  top: "47.38%", width: "33.33%" } }, mobile: { aspectRatio: "1.333" } },
+  { kind: "right",    desktop: { media: { left: "45.06%", top: "29.62%", width: "45.93%", height: "23.75%" }, label: { left: "45.06%", top: "54.12%", width: "45.93%" } }, mobile: { aspectRatio: "1.247" } },
+  { kind: "left",     desktop: { media: { left: "1.65%",  top: "50.00%", width: "41.27%", height: "20.13%" }, label: { left: "1.65%",  top: "70.88%", width: "41.27%" } }, mobile: { aspectRatio: "1.323" } },
+  { kind: "right",    desktop: { media: { left: "45.06%", top: "54.38%", width: "53.29%", height: "19.12%" }, label: { left: "45.06%", top: "74.25%", width: "53.29%" } }, mobile: { aspectRatio: "1.797" } },
+  { kind: "left",     desktop: { media: { left: "1.65%",  top: "75.25%", width: "58.13%", height: "22.75%" }, label: { left: "1.65%",  top: "98.75%", width: "58.13%" } }, mobile: { aspectRatio: "1.648" } },
+  { kind: "right",    desktop: { media: { left: "62.30%", top: "78.25%", width: "33.33%", height: "16.13%" }, label: { left: "62.30%", top: "95.13%", width: "33.33%" } }, mobile: { aspectRatio: "1.333" } },
 ];
 
-/** The slot a video at the given 0-based index renders in. Wraps every 12. */
+/** The slot a video at the given 0-based index renders in. Wraps every 7. */
 export function slotForIndex(index: number): Slot {
   const len = LAYOUT.length;
   return LAYOUT[((index % len) + len) % len];
 }
 
-/**
- * Walk a list of videos through the layout blueprint and group them into rows.
- * A featured slot becomes its own row; consecutive left+right slots share a
- * paired row. A list that ends on a left slot produces a final paired row
- * with only its left tile (the right half stays empty space).
- *
- * The blueprint is shape, not identity — position in the input array determines
- * which slot each item renders in. Item 0 always hits slot 0 (featured),
- * item 1 hits slot 1 (left), etc., regardless of any identifier on the item.
- */
-export function layoutRows<T>(items: T[]): LayoutRow<T>[] {
-  const rows: LayoutRow<T>[] = [];
-  let i = 0;
-  while (i < items.length) {
-    const slot = slotForIndex(i);
-    if (slot.kind === "featured") {
-      rows.push({ kind: "featured", items: [items[i]] });
-      i += 1;
-    } else {
-      const pair: [T] | [T, T] =
-        i + 1 < items.length ? [items[i], items[i + 1]] : [items[i]];
-      rows.push({ kind: "paired", items: pair });
-      i += pair.length;
-    }
+/** Chunk videos into scatter units of up to 7; the last unit may be partial. */
+export function layoutUnits<T>(items: T[]): T[][] {
+  const units: T[][] = [];
+  for (let i = 0; i < items.length; i += LAYOUT.length) {
+    units.push(items.slice(i, i + LAYOUT.length));
   }
-  return rows;
+  return units;
+}
+
+/** Full-unit canvas aspect (width / height): the reference composition scaled
+ * to full bleed — 1280 / 1984. */
+const UNIT_ASPECT = 1280 / 1984;
+/** Breathing room below the deepest card of a partial unit (unit-height fraction). */
+const BOTTOM_PAD = 0.04;
+
+/**
+ * Rendered aspect ratio for a unit holding `count` cards. A full unit uses
+ * the whole canvas; a partial trailing unit shrinks so the page doesn't end
+ * on dead whitespace: height stops at the deepest present card plus label
+ * padding.
+ */
+export function unitAspect(count: number): number {
+  const n = Math.max(1, Math.min(count, LAYOUT.length));
+  let maxBottom = 0;
+  for (const slot of LAYOUT.slice(0, n)) {
+    const bottom =
+      (parseFloat(slot.desktop.media.top) + parseFloat(slot.desktop.media.height)) / 100;
+    if (bottom > maxBottom) maxBottom = bottom;
+  }
+  return UNIT_ASPECT / Math.min(1, maxBottom + BOTTOM_PAD);
 }

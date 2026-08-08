@@ -3,7 +3,7 @@
 
 import { Fragment, useEffect, useState } from "react";
 import VideoModal from "./VideoModal";
-import { slotForIndex, layoutRows } from "@/lib/layout";
+import { slotForIndex, layoutUnits, unitAspect } from "@/lib/layout";
 import type { VideoWithThumbnail } from "@/lib/videos";
 
 type Props = {
@@ -114,38 +114,45 @@ export default function Portfolio({ videos }: Props) {
 
           <section id="work">
             {(() => {
-              const rows = layoutRows(videos);
+              const units = layoutUnits(videos);
               let videoIndex = 0;
-              return rows.map((row, rowIndex) => {
-                const rowClass = row.kind === "featured" ? "row is-full" : "row";
-                return (
-                  <div className={rowClass} key={rowIndex}>
-                    {row.items.map((v) => {
-                      const slot = slotForIndex(videoIndex);
-                      videoIndex += 1;
-                      const caption = captionFor(v);
-                      return (
-                        <Fragment key={v.id}>
-                          <button
-                            type="button"
-                            className="tile-media is-video"
-                            style={slot.desktop.media}
-                            onClick={open(v.vimeoId)}
-                            aria-label={`Play ${caption}`}
-                          >
-                            {v.thumbnail && <img src={v.thumbnail} alt={caption} />}
-                            <PlayIcon />
-                          </button>
-                          <div className="tile-label" style={slot.desktop.label}>
-                            <span className="client">{v.client}</span>
-                            {v.title && <span className="ttl">{v.title}</span>}
-                          </div>
-                        </Fragment>
-                      );
-                    })}
-                  </div>
-                );
-              });
+              return units.map((unit, unitIndex) => (
+                <div
+                  className="row"
+                  style={{ aspectRatio: String(unitAspect(unit.length)) }}
+                  key={unitIndex}
+                >
+                  {unit.map((v) => {
+                    const slot = slotForIndex(videoIndex);
+                    videoIndex += 1;
+                    const caption = captionFor(v);
+                    const reveal =
+                      slot.kind === "featured"
+                        ? "reveal-rise"
+                        : slot.kind === "left"
+                          ? "reveal-left"
+                          : "reveal-right";
+                    return (
+                      <Fragment key={v.id}>
+                        <button
+                          type="button"
+                          className={`tile-media is-video ${reveal}`}
+                          style={slot.desktop.media}
+                          onClick={open(v.vimeoId)}
+                          aria-label={`Play ${caption}`}
+                        >
+                          {v.thumbnail && <img src={v.thumbnail} alt={caption} />}
+                          <PlayIcon />
+                        </button>
+                        <div className="tile-label" style={slot.desktop.label}>
+                          <span className="client">{v.client}</span>
+                          {v.title && <span className="ttl">{v.title}</span>}
+                        </div>
+                      </Fragment>
+                    );
+                  })}
+                </div>
+              ));
             })()}
           </section>
 
