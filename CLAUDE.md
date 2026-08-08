@@ -24,8 +24,19 @@ password-gated admin dashboard sits at `/admin`.
 - Localhost and production share **one** Vercel Blob store. A **Save** in
   the local admin edits the live site's video list for real.
 - On `main`'s layout model, a card's rendered shape is a function of its
-  **position** (fixed 12-slot cycle in `lib/layout.ts`) — reordering videos
-  changes their shapes.
+  **position** (7-slot scatter unit in `lib/layout.ts`, transcribed from
+  `docs/reference/newlayout.jpeg`; spec:
+  `docs/superpowers/specs/2026-08-08-scatter-collage-layout-design.md`) —
+  reordering videos changes their shapes. Featured cards land on videos
+  1, 8, 15, …
+- `getVideos()` honors a `VIDEOS_FILE` env var (local JSON path) to preview
+  a different list without touching Blob. Dev-only; never set in production.
+- Blob snapshot/rollback: `scripts/backup-videos.mjs` /
+  `scripts/restore-videos.mjs` (see `docs/backups/`). The restore script is
+  also the ship tool for uploading a curated list.
+- CST "The Hand" is still awaited (no Vimeo upload); when it lands, insert
+  at position 11 (id `n-7`) per the spec — that puts Toyota back on the
+  third featured slot.
 - Local admin password: see `.env.local`. Production `ADMIN_PASSWORD` in
   Vercel is currently an **empty string**, so the production admin login is
   impossible (it fails closed) until a real value is set there.
