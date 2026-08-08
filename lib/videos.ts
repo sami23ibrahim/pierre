@@ -1,4 +1,5 @@
 import { list, put } from "@vercel/blob";
+import { readFileSync } from "node:fs";
 
 /** A portfolio video as stored. Array order is the public 1..N numbering. */
 export type Video = {
@@ -79,8 +80,19 @@ export function prepareVideos(drafts: DraftVideo[]): PrepareResult {
   return errors.length > 0 ? { ok: false, errors } : { ok: true, videos };
 }
 
-/** Read the video list from Blob. Falls back to SEED_VIDEOS on any failure. */
+/** Read the video list from Blob. Falls back to SEED_VIDEOS on any failure.
+ * Dev override: if VIDEOS_FILE is set, read that local JSON file instead —
+ * lets the new-layout branch preview a different list without touching the
+ * shared production Blob. Never set VIDEOS_FILE in production. */
 export async function getVideos(): Promise<Video[]> {
+  if (process.env.VIDEOS_FILE) {
+    try {
+      const data = JSON.parse(readFileSync(process.env.VIDEOS_FILE, "utf8"));
+      if (Array.isArray(data) && data.length > 0) return data as Video[];
+    } catch {
+      // unreadable override — fall through to the normal path
+    }
+  }
   try {
     const { blobs } = await list({ prefix: BLOB_KEY, limit: 1 });
     if (blobs.length === 0) return SEED_VIDEOS;
