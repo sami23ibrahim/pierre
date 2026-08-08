@@ -13,20 +13,32 @@ stay. Everything else — admin, video modal, contact, mobile stacking model,
 
 ## 1. Layout geometry (desktop)
 
-The reference is a 1280×1600 canvas (aspect 4:5) holding **7 cards on white**
-with wide margins. That whole canvas is one repeating **unit**: videos 1–7 fill
-unit 1, videos 8–14 unit 2, and so on. Card boxes, measured programmatically
-from the image (percent of unit width/height, rounded to 2 dp):
+The reference (`newlayout.jpeg`, 1280×1600) shows **card shapes, relative
+sizes, and the staggered arrangement** — NOT the page margins. Sami: "no
+white margins, the image is just to show how the cards' new shape will be."
+So the whole 7-card composition is scaled up uniformly (×1.2402) until its
+widest cards sit on the site's normal 1.65 % side margins (same as today's
+grid). Uniform scaling preserves every card's aspect ratio and the stagger;
+the featured card is re-centered (it is deliberately centered in the
+reference). Vertical percentages are unchanged by the scale; the unit canvas
+becomes 1280×1984 (aspect ≈ 0.645) instead of the reference's 1280×1600.
+
+That composition is one repeating **unit**: videos 1–7 fill unit 1, videos
+8–14 unit 2, and so on. Final card boxes (percent of unit width/height,
+rounded to 2 dp):
 
 | Slot | Kind     | Box (left, top, width, height) | Aspect | Notes |
 |------|----------|--------------------------------|--------|-------|
-| 0    | featured | 20.63, 5.50, 58.75, 23.38      | 2.01   | horizontally centered |
-| 1    | left     | 18.75, 30.50, 26.88, 16.13     | 1.33   | small |
-| 2    | right    | 50.47, 29.63, 37.03, 23.75     | 1.25   | tall — starts above slot 1, ends below it |
-| 3    | left     | 15.47, 50.00, 33.28, 20.13     | 1.32   | starts *above* slot 2's bottom edge (columns interleave) |
-| 4    | right    | 50.47, 54.37, 42.97, 19.13     | 1.80   | |
-| 5    | left     | 15.47, 75.25, 46.88, 22.75     | 1.65   | large |
-| 6    | right    | 64.38, 78.25, 26.88, 16.13     | 1.33   | small |
+| 0    | featured | 13.57, 5.50, 72.86, 23.37      | 2.01   | horizontally centered |
+| 1    | left     | 5.72, 30.50, 33.33, 16.13      | 1.33   | small |
+| 2    | right    | 45.06, 29.62, 45.93, 23.75     | 1.25   | tall — starts above slot 1, ends below it |
+| 3    | left     | 1.65, 50.00, 41.27, 20.13      | 1.32   | starts *above* slot 2's bottom edge (columns interleave); touches left margin |
+| 4    | right    | 45.06, 54.38, 53.29, 19.12     | 1.80   | touches right margin (98.35) |
+| 5    | left     | 1.65, 75.25, 58.13, 22.75      | 1.65   | large; touches left margin |
+| 6    | right    | 62.30, 78.25, 33.33, 16.13     | 1.33   | small |
+
+The left/right edges stay deliberately ragged (only the deepest cards touch
+the margins) — that is the scatter look, at full width.
 
 Slot order = reading order used by the curated list: featured first, then each
 band left card before right card. Video N (1-based) renders in slot (N−1) mod 7.
@@ -38,8 +50,9 @@ height (≈ 13 px at full width, matching the current label gap). Existing
 
 **Because slots 2 and 3 overlap vertically across columns, a unit renders as
 ONE positioning canvas** (one `.row` holding up to 7 tiles, `aspect-ratio:
-4 / 5`), not as stacked featured/pair rows. `lib/layout.ts` changes from "12
-slots grouped into featured/paired rows" to "7 slots grouped into units":
+1280 / 1984 ≈ 0.645`), not as stacked featured/pair rows. `lib/layout.ts`
+changes from "12 slots grouped into featured/paired rows" to "7 slots grouped
+into units":
 
 - `LAYOUT: Slot[]` — 7 entries with the boxes above (same `Slot` shape:
   desktop media + label + mobile aspectRatio; percentages relative to the unit).
@@ -47,10 +60,11 @@ slots grouped into featured/paired rows" to "7 slots grouped into units":
 - `layoutRows(items)` → `layoutUnits(items)`: chunks of 7, last chunk may be
   partial (1–6 items).
 - **Partial trailing unit:** the unit's height shrinks to fit its cards —
-  rendered aspect = `0.8 / (maxBottom + pad)` where `maxBottom` is the largest
-  card-bottom fraction among present slots and `pad` ≈ 0.04 (label + breathing
-  room). With 18 videos the last unit holds 4 cards (slots 0–3) at ~74 % height.
-  Expose this as a helper in `lib/layout.ts` (e.g. `unitAspect(count)`), unit-tested.
+  rendered aspect = `(1280/1984) / (maxBottom + pad)` where `maxBottom` is the
+  largest card-bottom fraction among present slots and `pad` ≈ 0.04 (label +
+  breathing room). With 18 videos the last unit holds 4 cards (slots 0–3) at
+  ~74 % height. Expose this as a helper in `lib/layout.ts`
+  (e.g. `unitAspect(count)`), unit-tested.
 
 **Reveal animations:** current CSS keys off `nth-child(1)/(3)` inside pair
 rows — that breaks with 7 tiles per row. Replace with per-slot classes derived

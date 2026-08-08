@@ -4,7 +4,7 @@
 
 **Goal:** Replace the 12-slot collage blueprint with the 7-slot scatter unit measured from `docs/reference/newlayout.jpeg`, and stage the curated 18-video order for a safe local preview (production Blob untouched until ship).
 
-**Architecture:** `lib/layout.ts` keeps its "position determines shape" model but the cycle becomes 7 slots rendered inside ONE absolutely-positioned unit canvas (aspect 4:5) per 7 videos — units replace featured/paired rows because the reference's left/right columns interleave vertically. Consumers (`Portfolio.tsx` desktop render, `AdminEditor.tsx` grouping, reveal CSS) switch from rows to units. The curated list ships as `data/videos-new.json`, previewed via a `VIDEOS_FILE` env override in `getVideos()`.
+**Architecture:** `lib/layout.ts` keeps its "position determines shape" model but the cycle becomes 7 slots rendered inside ONE absolutely-positioned unit canvas (aspect 1280/1984 ≈ 0.645 — the reference composition scaled to full bleed, since the image shows card shapes, not page margins) per 7 videos — units replace featured/paired rows because the reference's left/right columns interleave vertically. Consumers (`Portfolio.tsx` desktop render, `AdminEditor.tsx` grouping, reveal CSS) switch from rows to units. The curated list ships as `data/videos-new.json`, previewed via a `VIDEOS_FILE` env override in `getVideos()`.
 
 **Tech Stack:** Next.js 15 App Router, vitest, Vercel Blob (`@vercel/blob`), plain CSS in `app/globals.css`.
 
@@ -86,23 +86,25 @@ describe("layoutUnits", () => {
 });
 
 describe("unitAspect", () => {
-  it("is 4:5 (0.8) for a full unit", () => {
-    expect(unitAspect(7)).toBeCloseTo(0.8, 5);
+  const FULL = 1280 / 1984; // full-bleed unit canvas, ≈ 0.645
+
+  it("matches the full unit canvas for a full unit", () => {
+    expect(unitAspect(7)).toBeCloseTo(FULL, 5);
   });
 
   it("trims a 4-card trailing unit to ~74% height", () => {
     // deepest of slots 0-3 is slot 3: bottom 70.13% + 4% pad
-    expect(unitAspect(4)).toBeCloseTo(0.8 / 0.7413, 3);
+    expect(unitAspect(4)).toBeCloseTo(FULL / 0.7413, 3);
   });
 
   it("trims a 1-card unit to the featured card's band", () => {
-    // slot 0 bottom 28.88% + 4% pad
-    expect(unitAspect(1)).toBeCloseTo(0.8 / 0.3288, 3);
+    // slot 0 bottom 28.87% + 4% pad
+    expect(unitAspect(1)).toBeCloseTo(FULL / 0.3287, 3);
   });
 
   it("clamps out-of-range counts instead of failing", () => {
     expect(unitAspect(0)).toBeCloseTo(unitAspect(1), 5);
-    expect(unitAspect(99)).toBeCloseTo(0.8, 5);
+    expect(unitAspect(99)).toBeCloseTo(FULL, 5);
   });
 });
 ```
@@ -129,10 +131,14 @@ export type Slot = {
 };
 
 /**
- * The 7-slot scatter unit, measured programmatically from
- * docs/reference/newlayout.jpeg (1280x1600 canvas, aspect 4:5). Video N
- * renders in slot (N-1) mod 7, so the unit repeats every 7 videos —
- * featured cards land on videos 1, 8, 15, …
+ * The 7-slot scatter unit. Card shapes, relative sizes and stagger are
+ * measured programmatically from docs/reference/newlayout.jpeg; the whole
+ * composition is then scaled uniformly (x1.2402) to full bleed — the image
+ * shows the card shapes, not page margins — so the deepest cards sit on the
+ * site's usual 1.65% side margins and the featured card stays centered.
+ * Unit canvas: 1280x1984 (aspect ~0.645). Video N renders in slot
+ * (N-1) mod 7, so the unit repeats every 7 videos — featured cards land on
+ * videos 1, 8, 15, …
  *
  * All percentages are relative to the unit canvas. Slots 2 and 3 interleave
  * vertically across the left/right columns (slot 3 starts above slot 2's
@@ -141,13 +147,13 @@ export type Slot = {
  * its left edge. This is design, not content — it stays in code.
  */
 export const LAYOUT: Slot[] = [
-  { kind: "featured", desktop: { media: { left: "20.63%", top: "5.50%",  width: "58.75%", height: "23.38%" }, label: { left: "20.63%", top: "29.63%", width: "58.75%" } }, mobile: { aspectRatio: "2.011" } },
-  { kind: "left",     desktop: { media: { left: "18.75%", top: "30.50%", width: "26.88%", height: "16.13%" }, label: { left: "18.75%", top: "47.38%", width: "26.88%" } }, mobile: { aspectRatio: "1.333" } },
-  { kind: "right",    desktop: { media: { left: "50.47%", top: "29.63%", width: "37.03%", height: "23.75%" }, label: { left: "50.47%", top: "54.13%", width: "37.03%" } }, mobile: { aspectRatio: "1.247" } },
-  { kind: "left",     desktop: { media: { left: "15.47%", top: "50.00%", width: "33.28%", height: "20.13%" }, label: { left: "15.47%", top: "70.88%", width: "33.28%" } }, mobile: { aspectRatio: "1.323" } },
-  { kind: "right",    desktop: { media: { left: "50.47%", top: "54.37%", width: "42.97%", height: "19.13%" }, label: { left: "50.47%", top: "74.25%", width: "42.97%" } }, mobile: { aspectRatio: "1.797" } },
-  { kind: "left",     desktop: { media: { left: "15.47%", top: "75.25%", width: "46.88%", height: "22.75%" }, label: { left: "15.47%", top: "98.75%", width: "46.88%" } }, mobile: { aspectRatio: "1.648" } },
-  { kind: "right",    desktop: { media: { left: "64.38%", top: "78.25%", width: "26.88%", height: "16.13%" }, label: { left: "64.38%", top: "95.13%", width: "26.88%" } }, mobile: { aspectRatio: "1.333" } },
+  { kind: "featured", desktop: { media: { left: "13.57%", top: "5.50%",  width: "72.86%", height: "23.37%" }, label: { left: "13.57%", top: "29.62%", width: "72.86%" } }, mobile: { aspectRatio: "2.011" } },
+  { kind: "left",     desktop: { media: { left: "5.72%",  top: "30.50%", width: "33.33%", height: "16.13%" }, label: { left: "5.72%",  top: "47.38%", width: "33.33%" } }, mobile: { aspectRatio: "1.333" } },
+  { kind: "right",    desktop: { media: { left: "45.06%", top: "29.62%", width: "45.93%", height: "23.75%" }, label: { left: "45.06%", top: "54.12%", width: "45.93%" } }, mobile: { aspectRatio: "1.247" } },
+  { kind: "left",     desktop: { media: { left: "1.65%",  top: "50.00%", width: "41.27%", height: "20.13%" }, label: { left: "1.65%",  top: "70.88%", width: "41.27%" } }, mobile: { aspectRatio: "1.323" } },
+  { kind: "right",    desktop: { media: { left: "45.06%", top: "54.38%", width: "53.29%", height: "19.12%" }, label: { left: "45.06%", top: "74.25%", width: "53.29%" } }, mobile: { aspectRatio: "1.797" } },
+  { kind: "left",     desktop: { media: { left: "1.65%",  top: "75.25%", width: "58.13%", height: "22.75%" }, label: { left: "1.65%",  top: "98.75%", width: "58.13%" } }, mobile: { aspectRatio: "1.648" } },
+  { kind: "right",    desktop: { media: { left: "62.30%", top: "78.25%", width: "33.33%", height: "16.13%" }, label: { left: "62.30%", top: "95.13%", width: "33.33%" } }, mobile: { aspectRatio: "1.333" } },
 ];
 
 /** The slot a video at the given 0-based index renders in. Wraps every 7. */
@@ -165,15 +171,17 @@ export function layoutUnits<T>(items: T[]): T[][] {
   return units;
 }
 
-/** Full-unit canvas aspect (width / height): 1280 / 1600 from the reference. */
-const UNIT_ASPECT = 1280 / 1600;
+/** Full-unit canvas aspect (width / height): the reference composition scaled
+ * to full bleed — 1280 / 1984. */
+const UNIT_ASPECT = 1280 / 1984;
 /** Breathing room below the deepest card of a partial unit (unit-height fraction). */
 const BOTTOM_PAD = 0.04;
 
 /**
- * Rendered aspect ratio for a unit holding `count` cards. A full unit is 4:5;
- * a partial trailing unit shrinks so the page doesn't end on dead whitespace:
- * height stops at the deepest present card plus label padding.
+ * Rendered aspect ratio for a unit holding `count` cards. A full unit uses
+ * the whole canvas; a partial trailing unit shrinks so the page doesn't end
+ * on dead whitespace: height stops at the deepest present card plus label
+ * padding.
  */
 export function unitAspect(count: number): number {
   const n = Math.max(1, Math.min(count, LAYOUT.length));
@@ -300,7 +308,7 @@ Replace lines 121–129 (`.layout-desktop .row` and `.layout-desktop .row.is-ful
 .layout-desktop .row {
   position: relative;
   width: 100%;
-  /* aspect-ratio is set inline per unit: 4/5 full, shorter for a trailing partial unit */
+  /* aspect-ratio is set inline per unit: ~0.645 full, shorter for a trailing partial unit */
   container-type: inline-size;
 }
 ```
@@ -515,7 +523,7 @@ Run: `npm test` → all green. Run: `npm run build` → no errors.
 
 - [ ] **Step 2: Visual comparison, desktop**
 
-With the dev server running and `VIDEOS_FILE` set, screenshot http://localhost:3000 at ~1280 px width (browser tools or manual) and compare against `docs/reference/newlayout.jpeg`: centered 2:1 featured card up top with ~20% side margins; small-left/tall-right band; the tall right card's bottom edge reaching below the next left card's top (interleave); big-left/small-right final band; labels under every card; white everywhere else.
+With the dev server running and `VIDEOS_FILE` set, screenshot http://localhost:3000 at ~1280 px width (browser tools or manual) and compare against `docs/reference/newlayout.jpeg` — same composition, but scaled to full bleed (the reference's outer margins are NOT reproduced): centered 2:1 featured card up top at ~73% width; small-left/tall-right band; the tall right card's bottom edge reaching below the next left card's top (interleave); big-left/small-right final band with the deepest cards touching the normal 1.65% side margins like today's grid; ragged left/right edges otherwise; labels under every card.
 
 - [ ] **Step 3: Interactions and mobile**
 
